@@ -120,6 +120,7 @@ body {
     border-radius: 12px;
     cursor: pointer;
     box-shadow: 0 0 8px rgba(0,0,0,0.2);
+    position: absolute;
 }
 </style>
 </head>
@@ -191,7 +192,7 @@ async function renderSeats() {
     progress = 50;
     progressBar.style.width = progress + "%";
 
-    const blocked = turma ? await loadJSON(`https://script.google.com/macros/s/AKfycby6nfXn5tz0G7Cmf5SE5p4G11XMI-YhteAhf8qNzc6YFXUb2UezzPqIVz8yhEbsifqx/exec?curso=${turma}`) : [];
+    const blocked = turma ? await loadJSON(`https://script.google.com/macros/s/.../exec?curso=${turma}`) : [];
     const blockedNumbers = blocked.map(s => s.poltrona);
     progress = 80;
     progressBar.style.width = progress + "%";
@@ -222,36 +223,11 @@ async function renderSeats() {
     container.appendChild(grid);
 
     // -----------------------------
-    // Posiciona o botão CONFIRMAR alinhado à direita das duas últimas poltronas do lado direito
+    // Posiciona o botão CONFIRMAR sempre abaixo do container, alinhado à direita
     // -----------------------------
     const button = document.getElementById("confirmarBtn");
-    const containerSeats = container.querySelectorAll(".seat:not(.white, .blocked)");
-
-    if (containerSeats.length) {
-        const columns = config.layout[0].length; // número de colunas do ônibus
-        const totalRows = config.layout.length;
-        
-        // Pega as poltronas da última coluna (lado direito)
-        const lastColumnSeats = [];
-        for (let row = 0; row < totalRows; row++) {
-            const seatValue = config.layout[row][columns - 1];
-            if (seatValue !== null && seatValue !== "white") {
-                const seatIndex = Array.from(containerSeats).findIndex(s => s.textContent === seatValue.toString().padStart(2, "0"));
-                if (seatIndex !== -1) lastColumnSeats.push(containerSeats[seatIndex]);
-            }
-        }
-
-        if (lastColumnSeats.length) {
-            const lastSeat = lastColumnSeats[lastColumnSeats.length - 1];
-            const seatRect = lastSeat.getBoundingClientRect();
-            const wrapperRect = wrapper.getBoundingClientRect();
-
-            // Posiciona o botão logo abaixo e alinhado à direita da última poltrona da coluna direita
-            button.style.position = "absolute";
-            button.style.top = (seatRect.bottom - wrapperRect.top + 106) + "px";
-            button.style.left = (seatRect.right - wrapperRect.left - button.offsetWidth) + "px";
-        }
-    }
+    button.style.top = (container.offsetHeight + 20) + "px"; // 20px abaixo do container
+    button.style.left = (container.offsetWidth - button.offsetWidth) + "px";
 
     progress = 100;
     progressBar.style.width = progress + "%";
@@ -270,7 +246,7 @@ async function updateSeats() {
     const turma = params.get("turma") || "";
     if (!turma) return;
 
-    const blocked = await loadJSON(`https://script.google.com/macros/s/AKfycby6nfXn5tz0G7Cmf5SE5p4G11XMI-YhteAhf8qNzc6YFXUb2UezzPqIVz8yhEbsifqx/exec?curso=${turma}`);
+    const blocked = await loadJSON(`https://script.google.com/macros/s/.../exec?curso=${turma}`);
     const blockedNumbers = blocked.map(s => s.poltrona);
 
     document.querySelectorAll(".seat").forEach(seat => {
