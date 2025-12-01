@@ -231,7 +231,7 @@ async function renderSeats() {
     const wrapperRect = wrapper.getBoundingClientRect();
 
     button.style.top = (containerRect.bottom - wrapperRect.top + 10) + "px"; // 10px abaixo
-    button.style.left = (containerRect.right - wrapperRect.left - button.offsetWidth) + "px"; // alinhado à direita da última coluna
+    button.style.left = (containerRect.right - wrapperRect.left - button.offsetWidth - 18) + "px"; // alinhado à direita da última coluna
 
     progress = 100;
     progressBar.style.width = progress + "%";
