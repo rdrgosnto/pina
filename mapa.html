@@ -108,6 +108,11 @@ body {
     transition: width 0.1s linear;
 }
 
+/* Esconde o conteúdo do mapa até o carregamento completo */
+#bus-wrapper {
+    visibility: hidden;
+}
+
 /* BOTÃO CONFIRMAR fixo, abaixo do container, alinhado à direita da última coluna */
 #confirmarBtn {
     width: 112px;
@@ -236,6 +241,9 @@ async function renderSeats() {
     progress = 100;
     progressBar.style.width = progress + "%";
     clearInterval(interval);
+
+    // mostrar o mapa e botão só após o carregamento
+    wrapper.style.visibility = "visible";
 
     setTimeout(() => {
         const barContainer = document.getElementById("progress-bar-container");
