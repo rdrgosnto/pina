@@ -18,12 +18,6 @@ body {
     position: relative;
 }
 
-#bus-wrapper {
-    position: relative; /* referência para o botão */
-    display: flex;
-    flex-direction: column;
-}
-
 .bus-container {
     padding: 20px;
     border: 3px solid #b0b0b0;
@@ -126,7 +120,6 @@ body {
     border-radius: 12px;
     cursor: pointer;
     box-shadow: 0 0 8px rgba(0,0,0,0.2);
-    position: absolute; /* posição será calculada pelo JS */
 }
 </style>
 </head>
@@ -228,16 +221,36 @@ async function renderSeats() {
 
     container.appendChild(grid);
 
-    // Posiciona o botão CONFIRMAR alinhado às 2 últimas poltronas do lado direito
+    // -----------------------------
+    // Posiciona o botão CONFIRMAR alinhado à direita das duas últimas poltronas do lado direito
+    // -----------------------------
     const button = document.getElementById("confirmarBtn");
-    const allSeats = container.querySelectorAll(".seat:not(.white, .blocked)");
-    if (allSeats.length >= 2) {
-        const lastRightSeats = Array.from(allSeats).slice(-2);
-        const lastSeatRect = lastRightSeats[lastRightSeats.length - 1].getBoundingClientRect();
-        const wrapperRect = wrapper.getBoundingClientRect();
+    const containerSeats = container.querySelectorAll(".seat:not(.white, .blocked)");
 
-        button.style.top = (lastSeatRect.bottom - wrapperRect.top + 10) + "px"; // 10px abaixo
-        button.style.left = (lastSeatRect.right - wrapperRect.left - button.offsetWidth) + "px";
+    if (containerSeats.length) {
+        const columns = config.layout[0].length; // número de colunas do ônibus
+        const totalRows = config.layout.length;
+        
+        // Pega as poltronas da última coluna (lado direito)
+        const lastColumnSeats = [];
+        for (let row = 0; row < totalRows; row++) {
+            const seatValue = config.layout[row][columns - 1];
+            if (seatValue !== null && seatValue !== "white") {
+                const seatIndex = Array.from(containerSeats).findIndex(s => s.textContent === seatValue.toString().padStart(2, "0"));
+                if (seatIndex !== -1) lastColumnSeats.push(containerSeats[seatIndex]);
+            }
+        }
+
+        if (lastColumnSeats.length) {
+            const lastSeat = lastColumnSeats[lastColumnSeats.length - 1];
+            const seatRect = lastSeat.getBoundingClientRect();
+            const wrapperRect = wrapper.getBoundingClientRect();
+
+            // Posiciona o botão logo abaixo e alinhado à direita da última poltrona da coluna direita
+            button.style.position = "absolute";
+            button.style.top = (seatRect.bottom - wrapperRect.top + 10) + "px";
+            button.style.left = (seatRect.right - wrapperRect.left - button.offsetWidth) + "px";
+        }
     }
 
     progress = 100;
