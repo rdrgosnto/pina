@@ -131,40 +131,6 @@ body {
     bottom: -64px; /* 10px abaixo do container */
     right: 20px; /* movido um pouco para a esquerda */
 }
-
-/* Modal superior para CPF */
-#cpfModal {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #fff;
-    border: 2px solid #4CAF50;
-    border-radius: 12px;
-    padding: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    display: none;
-    z-index: 10000;
-}
-
-#cpfModal input {
-    padding: 8px;
-    font-size: 16px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    width: 200px;
-    margin-right: 8px;
-}
-
-#cpfModal button {
-    padding: 8px 12px;
-    font-size: 16px;
-    background: #4CAF50;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-}
 </style>
 </head>
 
@@ -178,12 +144,6 @@ body {
 <!-- Barra de progresso -->
 <div id="progress-bar-container">
     <div id="progress-bar"></div>
-</div>
-
-<!-- Modal CPF -->
-<div id="cpfModal">
-    <input type="text" id="cpfInput" placeholder="Digite seu CPF">
-    <button id="cpfSubmit">Enviar</button>
 </div>
 
 <script>
@@ -284,30 +244,8 @@ async function renderSeats() {
     }, 300);
 }
 
-async function updateSeats() {
-    const params = new URLSearchParams(window.location.search);
-    const turma = params.get("turma") || "";
-    if (!turma) return;
-
-    const blocked = await loadJSON(`https://script.google.com/macros/s/AKfycby6nfXn5tz0G7Cmf5SE5p4G11XMI-YhteAhf8qNzc6YFXUb2UezzPqIVz8yhEbsifqx/exec?curso=${turma}`);
-    const blockedNumbers = blocked.map(s => s.poltrona);
-
-    document.querySelectorAll(".seat").forEach(seat => {
-        const num = seat.textContent;
-        if (blockedNumbers.includes(num)) {
-            seat.classList.add("blocked");
-            seat.onclick = null;
-            if (selectedSeat && selectedSeat.textContent === num) selectedSeat = null;
-            seat.classList.remove("selected");
-        } else {
-            seat.classList.remove("blocked");
-            seat.onclick = () => selectSeat(seat);
-        }
-    });
-}
-
 function validarCPF(cpf) {
-    cpf = cpf.replace(/\D/g, '');
+    cpf = cpf.replace(/\D/g, '').padStart(11, '0'); // garante zeros à esquerda
     if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
 
     let soma = 0;
@@ -324,18 +262,16 @@ function validarCPF(cpf) {
 }
 
 // BOTÃO CONFIRMAR
-document.getElementById("confirmarBtn").addEventListener("click", () => {
+document.getElementById("confirmarBtn").addEventListener("click", async () => {
     if (!selectedSeat) {
         alert("Selecione uma poltrona antes de confirmar.");
         return;
     }
-    document.getElementById("cpfModal").style.display = "flex";
-});
 
-// BOTÃO ENVIAR CPF
-document.getElementById("cpfSubmit").addEventListener("click", async () => {
-    const input = document.getElementById("cpfInput");
-    let cpf = input.value.replace(/\D/g,'');
+    let cpf = prompt("Digite seu CPF (apenas números):");
+    if (!cpf) return; // cancelou
+    cpf = cpf.replace(/\D/g, '').padStart(11, '0');
+
     if (!validarCPF(cpf)) {
         alert("CPF inválido. Digite novamente.");
         return;
@@ -354,9 +290,8 @@ document.getElementById("cpfSubmit").addEventListener("click", async () => {
             body: JSON.stringify({ poltrona, curso: turma, cpf })
         });
         if(res.ok){
-            alert("Assento confirmado com sucesso!");
-            document.getElementById("cpfModal").style.display = "none";
-            input.value = "";
+            alert("Poltrona confirmada com sucesso!");
+            setTimeout(() => location.reload(), 4000); // atualiza após 4s
         } else {
             alert("Erro ao enviar os dados. Tente novamente.");
         }
@@ -366,9 +301,7 @@ document.getElementById("cpfSubmit").addEventListener("click", async () => {
     }
 });
 
-renderSeats().then(() => {
-    setInterval(updateSeats, 30000);
-});
+renderSeats();
 </script>
 </body>
 </html>
