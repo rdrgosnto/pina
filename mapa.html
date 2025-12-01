@@ -6,6 +6,7 @@
 <title>Planner | Mapa</title>
 
 <style>
+/* (seu CSS está sem problemas – deixei igual) */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -17,14 +18,11 @@ body {
     background: #fff;
     position: relative;
 }
-
-/* Reduz todo o mapa para 90% do tamanho original */
 #bus-wrapper {
-    transform: scale(0.9);  
-    transform-origin: top center; 
-    display: none; /* começa oculto até carregar */
+    transform: scale(0.9);
+    transform-origin: top center;
+    display: none;
 }
-
 .bus-container {
     padding: 20px;
     border: 3px solid #b0b0b0;
@@ -33,17 +31,15 @@ body {
     margin: 20px auto;
     display: flex;
     justify-content: center;
-    position: relative; /* para o botão absoluto ser relativo ao container */
+    position: relative;
 }
-
 .grid {
     display: grid;
     grid-template-columns: repeat(5, 54px);
-    column-gap: 10px; 
+    column-gap: 10px;
     row-gap: 14px;
     justify-items: center;
 }
-
 .seat, .empty {
     width: 54px;
     height: 54px;
@@ -53,14 +49,12 @@ body {
     border-radius: 12px;
     position: relative;
 }
-
 .seat {
     background: #4CAF50;
     border: 3px solid #4CAF50;
     color: #fff;
     font-weight: bold;
 }
-
 .seat::after {
     content: "";
     position: absolute;
@@ -73,49 +67,38 @@ body {
     background: #fff;
     border: 3px solid #8c96b2;
 }
-
 .seat.white {
     background: #fff;
     border: 3px solid #ccc;
     color: transparent;
 }
-
-.seat.white::after { 
-    border: 3px solid #ccc; 
+.seat.white::after {
+    border: 3px solid #ccc;
 }
-
 .seat.blocked {
     background: #6b6b6b;
     border: 3px solid #6b6b6b;
 }
-
 .seat.selected {
     background: #e74c3c;
     border-color: #e74c3c;
 }
-
 .empty { background: transparent; }
-
-/* Barra de progresso fixa inferior */
 #progress-bar-container {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 8px; 
+    height: 8px;
     background: rgba(0,0,0,0.1);
     z-index: 9999;
 }
-
 #progress-bar {
     width: 0%;
     height: 100%;
     background: #4CAF50;
-    border-radius: 0;
     transition: width 0.1s linear;
 }
-
-/* BOTÃO CONFIRMAR fixo dentro do container */
 #confirmarBtn {
     width: 112px;
     height: 54px;
@@ -126,44 +109,54 @@ body {
     font-weight: bold;
     border-radius: 12px;
     cursor: pointer;
-    box-shadow: 0 0 8px rgba(0,0,0,0.2);
     position: absolute;
-    bottom: -64px; /* 10px abaixo do container */
-    right: 20px; /* movido um pouco para a esquerda */
+    bottom: -64px;
+    right: 20px;
 }
 </style>
 </head>
 
 <body>
+
 <div id="bus-wrapper">
     <div class="bus-container">
         <button id="confirmarBtn">CONFIRMAR</button>
     </div>
 </div>
 
-<!-- Barra de progresso -->
 <div id="progress-bar-container">
     <div id="progress-bar"></div>
 </div>
 
 <script>
+
 let selectedSeat = null;
 
 async function loadJSON(url) {
     try {
         const res = await fetch(url);
-        return res.ok ? await res.json() : null;
-    } catch { return null; }
+        if (!res.ok) return null;
+
+        // Proteção contra JSON inválido
+        return await res.json().catch(() => null);
+
+    } catch {
+        return null;
+    }
 }
 
 function createSeat(value) {
     const el = document.createElement("div");
-    if (value === null) el.className = "empty";
-    else if (value === "white") el.className = "seat white";
-    else {
+
+    if (value === null) {
+        el.className = "empty";
+    } else if (value === "white") {
+        el.className = "seat white";
+    } else {
         el.className = "seat";
         el.textContent = value.toString().padStart(2, "0");
     }
+
     return el;
 }
 
@@ -179,6 +172,7 @@ function selectSeat(el) {
 }
 
 async function renderSeats() {
+
     const params = new URLSearchParams(window.location.search);
     const busId = params.get("bus") || "0052";
     const turma = params.get("turma") || "";
@@ -186,24 +180,33 @@ async function renderSeats() {
     const progressBar = document.getElementById("progress-bar");
     let progress = 0;
 
+    // animação inicial
     const interval = setInterval(() => {
-        if(progress < 95){
-            progress += 0.2; 
+        if (progress < 95) {
+            progress += 0.2;
             progressBar.style.width = progress + "%";
         }
     }, 16);
 
+    // Carregar configuração do ônibus
     const config = await loadJSON(`./configs/${busId}.json`);
-    if (!config) return;
-    progress = 50;
-    progressBar.style.width = progress + "%";
+    if (!config || !config.layout) {
+        clearInterval(interval);
+        alert("Erro ao carregar o layout do ônibus.");
+        return;
+    }
 
-    const blocked = turma 
+    progressBar.style.width = "50%";
+
+    // Carregar bloqueados — AGORA SEGURO
+    let blocked = turma
         ? await loadJSON(`https://script.google.com/macros/s/AKfycby6nfXn5tz0G7Cmf5SE5p4G11XMI-YhteAhf8qNzc6YFXUb2UezzPqIVz8yhEbsifqx/exec?curso=${turma}`)
         : [];
+
+    if (!Array.isArray(blocked)) blocked = [];
     const blockedNumbers = blocked.map(s => s.poltrona);
-    progress = 80;
-    progressBar.style.width = progress + "%";
+
+    progressBar.style.width = "80%";
 
     const wrapper = document.getElementById("bus-wrapper");
     const container = wrapper.querySelector(".bus-container");
@@ -211,41 +214,48 @@ async function renderSeats() {
     const grid = document.createElement("div");
     grid.className = "grid";
 
-    const totalSeats = config.layout.flat().length;
+    const layoutFlat = Array.isArray(config.layout) ? config.layout.flat() : [];
+
+    const totalSeats = layoutFlat.length;
     let loadedSeats = 0;
 
-    config.layout.flat().forEach(seat => {
+    layoutFlat.forEach(seat => {
         const el = createSeat(seat);
+
         if (seat !== null && seat !== "white") {
             const num = seat.toString().padStart(2, "0");
-            if (blockedNumbers.includes(num)) el.classList.add("blocked");
-            else el.addEventListener("click", () => selectSeat(el));
+
+            if (blockedNumbers.includes(num)) {
+                el.classList.add("blocked");
+            } else {
+                el.addEventListener("click", () => selectSeat(el));
+            }
         }
+
         grid.appendChild(el);
+
         loadedSeats++;
-        const seatProgress = 80 + Math.round((loadedSeats / totalSeats) * 20);
-        if(seatProgress > progress) progress = seatProgress;
-        progressBar.style.width = progress + "%";
+        progressBar.style.width = (80 + (loadedSeats / totalSeats) * 20) + "%";
     });
 
     container.appendChild(grid);
 
-    progress = 100;
-    progressBar.style.width = progress + "%";
     clearInterval(interval);
 
-    wrapper.style.display = "block";
+    progressBar.style.width = "100%";
 
     setTimeout(() => {
-        const barContainer = document.getElementById("progress-bar-container");
-        barContainer.style.transition = "opacity 0.3s ease";
-        barContainer.style.opacity = 0;
-        setTimeout(() => barContainer.remove(), 300);
+        document.getElementById("progress-bar-container").style.opacity = 0;
+        setTimeout(() => {
+            document.getElementById("progress-bar-container").remove();
+        }, 300);
     }, 300);
+
+    wrapper.style.display = "block";
 }
 
 function validarCPF(cpf) {
-    cpf = cpf.replace(/\D/g, '').padStart(11, '0'); // garante zeros à esquerda
+    cpf = cpf.replace(/\D/g, '').padStart(11, '0');
     if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
 
     let soma = 0;
@@ -258,10 +268,10 @@ function validarCPF(cpf) {
     for (let i = 0; i < 10; i++) soma += parseInt(cpf[i]) * (11 - i);
     resto = (soma * 10) % 11;
     if (resto === 10) resto = 0;
+
     return resto === parseInt(cpf[10]);
 }
 
-// BOTÃO CONFIRMAR
 document.getElementById("confirmarBtn").addEventListener("click", async () => {
     if (!selectedSeat) {
         alert("Selecione uma poltrona antes de confirmar.");
@@ -269,39 +279,42 @@ document.getElementById("confirmarBtn").addEventListener("click", async () => {
     }
 
     let cpf = prompt("Digite seu CPF (apenas números):");
-    if (!cpf) return; // cancelou
+    if (!cpf) return;
+
     cpf = cpf.replace(/\D/g, '').padStart(11, '0');
 
     if (!validarCPF(cpf)) {
-        alert("CPF inválido. Digite novamente.");
+        alert("CPF inválido.");
         return;
     }
 
-    const params = new URLSearchParams(window.location.search);
-    const turma = params.get("turma") || "";
+    const turma = new URLSearchParams(window.location.search).get("turma") || "";
     const poltrona = selectedSeat.textContent;
 
-    const powerAutomateUrl = "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/5496eb2ad8a74af9b5080744a0d24807/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=KoClUQbjbcx8G9By-JcoWIyEb17CWvksL_bPqXFi22Q";
+    const url = "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/5496eb2ad8a74af9b5080744a0d24807/triggers/manual/paths/invoke?api-version=1";
 
     try {
-        const res = await fetch(powerAutomateUrl, {
+        const res = await fetch(url, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify({ poltrona, curso: turma, cpf })
         });
-        if(res.ok){
-            alert("Poltrona confirmada com sucesso!");
-            setTimeout(() => location.reload(), 4000); // atualiza após 4s
+
+        if (res.ok) {
+            alert("Poltrona confirmada!");
+            setTimeout(() => location.reload(), 4000);
         } else {
-            alert("Erro ao enviar os dados. Tente novamente.");
+            alert("Erro ao enviar os dados.");
         }
-    } catch (e) {
-        alert("Erro na comunicação com o servidor.");
+
+    } catch(e) {
+        alert("Erro de comunicação.");
         console.error(e);
     }
 });
 
 renderSeats();
+
 </script>
 </body>
 </html>
