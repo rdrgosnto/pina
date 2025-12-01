@@ -108,9 +108,11 @@ body {
     transition: width 0.1s linear;
 }
 
-/* Esconde o conteúdo do mapa até o carregamento completo */
+/* Conteúdo do mapa inicialmente escondido */
 #bus-wrapper {
     visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.5s ease;
 }
 
 /* BOTÃO CONFIRMAR fixo, abaixo do container, alinhado à direita da última coluna */
@@ -134,11 +136,9 @@ body {
 <div id="bus-wrapper">
     <div class="bus-container"></div>
 
-    <!-- Botão CONFIRMAR fora do container -->
     <button id="confirmarBtn">CONFIRMAR</button>
 </div>
 
-<!-- Barra de progresso -->
 <div id="progress-bar-container">
     <div id="progress-bar"></div>
 </div>
@@ -195,7 +195,6 @@ async function renderSeats() {
     progress = 50;
     progressBar.style.width = progress + "%";
 
-    // Chamada ao Google Apps Script para poltronas bloqueadas
     const blocked = turma 
         ? await loadJSON(`https://script.google.com/macros/s/AKfycby6nfXn5tz0G7Cmf5SE5p4G11XMI-YhteAhf8qNzc6YFXUb2UezzPqIVz8yhEbsifqx/exec?curso=${turma}`)
         : [];
@@ -228,22 +227,20 @@ async function renderSeats() {
 
     container.appendChild(grid);
 
-    // -----------------------------
-    // Botão CONFIRMAR fixo: abaixo do container e à direita da última coluna
-    // -----------------------------
     const button = document.getElementById("confirmarBtn");
     const containerRect = container.getBoundingClientRect();
     const wrapperRect = wrapper.getBoundingClientRect();
 
-    button.style.top = (containerRect.bottom - wrapperRect.top + 10) + "px"; // 10px abaixo
-    button.style.left = (containerRect.right - wrapperRect.left - button.offsetWidth - 18) + "px"; // alinhado à direita da última coluna
+    button.style.top = (containerRect.bottom - wrapperRect.top + 10) + "px";
+    button.style.left = (containerRect.right - wrapperRect.left - button.offsetWidth - 18) + "px";
 
     progress = 100;
     progressBar.style.width = progress + "%";
     clearInterval(interval);
 
-    // mostrar o mapa e botão só após o carregamento
+    // Fade-in do conteúdo
     wrapper.style.visibility = "visible";
+    wrapper.style.opacity = 1;
 
     setTimeout(() => {
         const barContainer = document.getElementById("progress-bar-container");
