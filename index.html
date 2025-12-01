@@ -229,8 +229,8 @@ async function renderSeats() {
     const wrapperRect = wrapper.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
 
-    const relativeTop = containerRect.bottom - wrapperRect.top + 20; // 20px abaixo
-    const relativeLeft = containerRect.right - wrapperRect.left - button.offsetWidth; // à direita do container
+    const relativeTop = containerRect.bottom - wrapperRect.top + 10; // 20px abaixo
+    const relativeLeft = containerRect.right - wrapperRect.left - button.offsetWidth - 16; // à direita do container
 
     button.style.top = relativeTop + "px";
     button.style.left = relativeLeft + "px";
