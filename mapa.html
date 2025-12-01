@@ -108,7 +108,7 @@ body {
     transition: width 0.1s linear;
 }
 
-/* BOTÃO CONFIRMAR */
+/* BOTÃO CONFIRMAR fixo, abaixo do container, alinhado à direita da última coluna */
 #confirmarBtn {
     width: 112px;
     height: 54px;
@@ -190,7 +190,7 @@ async function renderSeats() {
     progress = 50;
     progressBar.style.width = progress + "%";
 
-    // Chamada ao Google Apps Script para poltronas bloqueadas por turma
+    // Chamada ao Google Apps Script para poltronas bloqueadas
     const blocked = turma 
         ? await loadJSON(`https://script.google.com/macros/s/AKfycby6nfXn5tz0G7Cmf5SE5p4G11XMI-YhteAhf8qNzc6YFXUb2UezzPqIVz8yhEbsifqx/exec?curso=${turma}`)
         : [];
@@ -224,20 +224,14 @@ async function renderSeats() {
     container.appendChild(grid);
 
     // -----------------------------
-    // Posiciona o botão CONFIRMAR abaixo do container, alinhado à direita
+    // Botão CONFIRMAR fixo: abaixo do container e à direita da última coluna
     // -----------------------------
     const button = document.getElementById("confirmarBtn");
     const containerRect = container.getBoundingClientRect();
     const wrapperRect = wrapper.getBoundingClientRect();
 
-    // Ajuste aqui se quiser mover mais para cima ou esquerda
-    const offsetTop = 10;  // reduz para subir
-    const offsetLeft = 10; // aumenta para mover um pouco para a esquerda
-
-    const relativeTop = containerRect.bottom - wrapperRect.top + offsetTop;
-    const relativeLeft = containerRect.right - wrapperRect.left - button.offsetWidth - offsetLeft;
-    button.style.top = relativeTop + "px";
-    button.style.left = relativeLeft + "px";
+    button.style.top = (containerRect.bottom - wrapperRect.top + 10) + "px"; // 10px abaixo
+    button.style.left = (containerRect.right - wrapperRect.left - button.offsetWidth) + "px"; // alinhado à direita da última coluna
 
     progress = 100;
     progressBar.style.width = progress + "%";
