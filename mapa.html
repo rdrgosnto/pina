@@ -18,6 +18,13 @@ body {
     position: relative;
 }
 
+/* Reduz todo o mapa para 90% do tamanho original */
+#bus-wrapper {
+    transform: scale(0.9);  
+    transform-origin: top center; 
+    display: none; /* começa oculto até carregar */
+}
+
 .bus-container {
     padding: 20px;
     border: 3px solid #b0b0b0;
@@ -26,7 +33,7 @@ body {
     margin: 20px auto;
     display: flex;
     justify-content: center;
-    position: relative;
+    position: relative; /* para o botão absoluto ser relativo ao container */
 }
 
 .grid {
@@ -108,14 +115,7 @@ body {
     transition: width 0.1s linear;
 }
 
-/* Conteúdo do mapa inicialmente escondido */
-#bus-wrapper {
-    visibility: hidden;
-    opacity: 0;
-    transition: opacity 0.5s ease;
-}
-
-/* BOTÃO CONFIRMAR fixo, abaixo do container, alinhado à direita da última coluna */
+/* BOTÃO CONFIRMAR fixo dentro do container */
 #confirmarBtn {
     width: 112px;
     height: 54px;
@@ -128,17 +128,20 @@ body {
     cursor: pointer;
     box-shadow: 0 0 8px rgba(0,0,0,0.2);
     position: absolute;
+    bottom: -64px; /* 10px abaixo do container */
+    right: 20px; /* movido um pouco para a esquerda */
 }
 </style>
 </head>
 
 <body>
 <div id="bus-wrapper">
-    <div class="bus-container"></div>
-
-    <button id="confirmarBtn">CONFIRMAR</button>
+    <div class="bus-container">
+        <button id="confirmarBtn">CONFIRMAR</button>
+    </div>
 </div>
 
+<!-- Barra de progresso -->
 <div id="progress-bar-container">
     <div id="progress-bar"></div>
 </div>
@@ -227,20 +230,11 @@ async function renderSeats() {
 
     container.appendChild(grid);
 
-    const button = document.getElementById("confirmarBtn");
-    const containerRect = container.getBoundingClientRect();
-    const wrapperRect = wrapper.getBoundingClientRect();
-
-    button.style.top = (containerRect.bottom - wrapperRect.top + 10) + "px";
-    button.style.left = (containerRect.right - wrapperRect.left - button.offsetWidth - 18) + "px";
-
     progress = 100;
     progressBar.style.width = progress + "%";
     clearInterval(interval);
 
-    // Fade-in do conteúdo
-    wrapper.style.visibility = "visible";
-    wrapper.style.opacity = 1;
+    wrapper.style.display = "block";
 
     setTimeout(() => {
         const barContainer = document.getElementById("progress-bar-container");
@@ -250,31 +244,64 @@ async function renderSeats() {
     }, 300);
 }
 
-async function updateSeats() {
-    const params = new URLSearchParams(window.location.search);
-    const turma = params.get("turma") || "";
-    if (!turma) return;
+function validarCPF(cpf) {
+    cpf = cpf.replace(/\D/g, '').padStart(11, '0'); // garante zeros à esquerda
+    if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
 
-    const blocked = await loadJSON(`https://script.google.com/macros/s/AKfycby6nfXn5tz0G7Cmf5SE5p4G11XMI-YhteAhf8qNzc6YFXUb2UezzPqIVz8yhEbsifqx/exec?curso=${turma}`);
-    const blockedNumbers = blocked.map(s => s.poltrona);
+    let soma = 0;
+    for (let i = 0; i < 9; i++) soma += parseInt(cpf[i]) * (10 - i);
+    let resto = (soma * 10) % 11;
+    if (resto === 10) resto = 0;
+    if (resto !== parseInt(cpf[9])) return false;
 
-    document.querySelectorAll(".seat").forEach(seat => {
-        const num = seat.textContent;
-        if (blockedNumbers.includes(num)) {
-            seat.classList.add("blocked");
-            seat.onclick = null;
-            if (selectedSeat && selectedSeat.textContent === num) selectedSeat = null;
-            seat.classList.remove("selected");
-        } else {
-            seat.classList.remove("blocked");
-            seat.onclick = () => selectSeat(seat);
-        }
-    });
+    soma = 0;
+    for (let i = 0; i < 10; i++) soma += parseInt(cpf[i]) * (11 - i);
+    resto = (soma * 10) % 11;
+    if (resto === 10) resto = 0;
+    return resto === parseInt(cpf[10]);
 }
 
-renderSeats().then(() => {
-    setInterval(updateSeats, 30000);
+// BOTÃO CONFIRMAR
+document.getElementById("confirmarBtn").addEventListener("click", async () => {
+    if (!selectedSeat) {
+        alert("Selecione uma poltrona antes de confirmar.");
+        return;
+    }
+
+    let cpf = prompt("Digite seu CPF (apenas números):");
+    if (!cpf) return; // cancelou
+    cpf = cpf.replace(/\D/g, '').padStart(11, '0');
+
+    if (!validarCPF(cpf)) {
+        alert("CPF inválido. Digite novamente.");
+        return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const turma = params.get("turma") || "";
+    const poltrona = selectedSeat.textContent;
+
+    const powerAutomateUrl = "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/5496eb2ad8a74af9b5080744a0d24807/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=KoClUQbjbcx8G9By-JcoWIyEb17CWvksL_bPqXFi22Q";
+
+    try {
+        const res = await fetch(powerAutomateUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ poltrona, curso: turma, cpf })
+        });
+        if(res.ok){
+            alert("Poltrona confirmada com sucesso!");
+            setTimeout(() => location.reload(), 4000); // atualiza após 4s
+        } else {
+            alert("Erro ao enviar os dados. Tente novamente.");
+        }
+    } catch (e) {
+        alert("Erro na comunicação com o servidor.");
+        console.error(e);
+    }
 });
+
+renderSeats();
 </script>
 </body>
 </html>
