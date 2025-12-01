@@ -22,7 +22,7 @@ body {
 #bus-wrapper {
     transform: scale(0.9);  
     transform-origin: top center; 
-    display: none; /* começa escondido até carregar */
+    display: none; /* começa oculto até carregar */
 }
 
 .bus-container {
@@ -115,7 +115,7 @@ body {
     transition: width 0.1s linear;
 }
 
-/* BOTÃO CONFIRMAR fixo, abaixo do container, alinhado à direita da última coluna */
+/* BOTÃO CONFIRMAR fixo abaixo do container */
 #confirmarBtn {
     width: 112px;
     height: 54px;
@@ -135,9 +135,12 @@ body {
 <body>
 <div id="bus-wrapper">
     <div class="bus-container"></div>
+
+    <!-- Botão CONFIRMAR -->
     <button id="confirmarBtn">CONFIRMAR</button>
 </div>
 
+<!-- Barra de progresso -->
 <div id="progress-bar-container">
     <div id="progress-bar"></div>
 </div>
@@ -227,21 +230,20 @@ async function renderSeats() {
     container.appendChild(grid);
 
     // -----------------------------
-    // Ajuste do botão para escala
+    // Botão CONFIRMAR fixo: abaixo do container e à direita
     // -----------------------------
     const button = document.getElementById("confirmarBtn");
-    const containerRect = container.getBoundingClientRect();
-    const wrapperRect = wrapper.getBoundingClientRect();
-    const scale = 0.9; // mesma escala do CSS
+    const containerOffsetTop = container.offsetTop;
+    const containerOffsetLeft = container.offsetLeft;
 
-    button.style.top = ((containerRect.bottom - wrapperRect.top + 10) * scale) + "px";
-    button.style.left = ((containerRect.right - wrapperRect.left - button.offsetWidth - 18) * scale) + "px";
+    button.style.top = (containerOffsetTop + container.offsetHeight + 10) + "px"; // 10px abaixo
+    button.style.left = (containerOffsetLeft + container.offsetWidth - button.offsetWidth) + "px"; // alinhado à direita
 
     progress = 100;
     progressBar.style.width = progress + "%";
     clearInterval(interval);
 
-    // mostra tudo após carregar
+    // mostra o mapa completo apenas após carregar
     wrapper.style.display = "block";
 
     setTimeout(() => {
