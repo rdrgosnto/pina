@@ -230,14 +230,15 @@ async function renderSeats() {
     container.appendChild(grid);
 
     // -----------------------------
-    // Botão CONFIRMAR fixo: abaixo do container e à direita
+    // Corrige a posição do botão CONFIRMAR considerando a escala do wrapper
     // -----------------------------
     const button = document.getElementById("confirmarBtn");
-    const containerOffsetTop = container.offsetTop;
-    const containerOffsetLeft = container.offsetLeft;
+    const scale = 0.9; // mesma escala do #bus-wrapper
+    const containerRect = container.getBoundingClientRect();
+    const wrapperRect = wrapper.getBoundingClientRect();
 
-    button.style.top = (containerOffsetTop + container.offsetHeight + 10) + "px"; // 10px abaixo
-    button.style.left = (containerOffsetLeft + container.offsetWidth - button.offsetWidth) + "px"; // alinhado à direita
+    button.style.top = ((containerRect.bottom - wrapperRect.top) / scale + 10) + "px";
+    button.style.left = ((containerRect.right - wrapperRect.left - button.offsetWidth) / scale) + "px";
 
     progress = 100;
     progressBar.style.width = progress + "%";
