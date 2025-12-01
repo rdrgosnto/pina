@@ -165,9 +165,7 @@ function selectSeat(el) {
         selectedSeat = null;
         return;
     }
-
     if (selectedSeat) selectedSeat.classList.remove("selected");
-
     el.classList.add("selected");
     selectedSeat = el;
 }
@@ -192,7 +190,10 @@ async function renderSeats() {
     progress = 50;
     progressBar.style.width = progress + "%";
 
-    const blocked = turma ? await loadJSON(`https://script.google.com/macros/s/.../exec?curso=${turma}`) : [];
+    // Chamada ao Google Apps Script para poltronas bloqueadas por turma
+    const blocked = turma 
+        ? await loadJSON(`https://script.google.com/macros/s/AKfycby6nfXn5tz0G7Cmf5SE5p4G11XMI-YhteAhf8qNzc6YFXUb2UezzPqIVz8yhEbsifqx/exec?curso=${turma}`)
+        : [];
     const blockedNumbers = blocked.map(s => s.poltrona);
     progress = 80;
     progressBar.style.width = progress + "%";
@@ -223,15 +224,18 @@ async function renderSeats() {
     container.appendChild(grid);
 
     // -----------------------------
-    // Posiciona o botão CONFIRMAR corretamente
+    // Posiciona o botão CONFIRMAR abaixo do container, alinhado à direita
     // -----------------------------
     const button = document.getElementById("confirmarBtn");
-    const wrapperRect = wrapper.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
+    const wrapperRect = wrapper.getBoundingClientRect();
 
-    const relativeTop = containerRect.bottom - wrapperRect.top + 10; // 20px abaixo
-    const relativeLeft = containerRect.right - wrapperRect.left - button.offsetWidth - 18; // à direita do container
+    // Ajuste aqui se quiser mover mais para cima ou esquerda
+    const offsetTop = 10;  // reduz para subir
+    const offsetLeft = 10; // aumenta para mover um pouco para a esquerda
 
+    const relativeTop = containerRect.bottom - wrapperRect.top + offsetTop;
+    const relativeLeft = containerRect.right - wrapperRect.left - button.offsetWidth - offsetLeft;
     button.style.top = relativeTop + "px";
     button.style.left = relativeLeft + "px";
 
@@ -252,7 +256,7 @@ async function updateSeats() {
     const turma = params.get("turma") || "";
     if (!turma) return;
 
-    const blocked = await loadJSON(`https://script.google.com/macros/s/.../exec?curso=${turma}`);
+    const blocked = await loadJSON(`https://script.google.com/macros/s/AKfycby6nfXn5tz0G7Cmf5SE5p4G11XMI-YhteAhf8qNzc6YFXUb2UezzPqIVz8yhEbsifqx/exec?curso=${turma}`);
     const blockedNumbers = blocked.map(s => s.poltrona);
 
     document.querySelectorAll(".seat").forEach(seat => {
