@@ -22,7 +22,6 @@ body {
     position: relative; /* referência para o botão */
     display: flex;
     flex-direction: column;
-    align-items: flex-end; /* botão à direita */
 }
 
 .bus-container {
@@ -127,7 +126,7 @@ body {
     border-radius: 12px;
     cursor: pointer;
     box-shadow: 0 0 8px rgba(0,0,0,0.2);
-    margin-top: 10px; /* distância do container */
+    position: absolute; /* posição será calculada pelo JS */
 }
 </style>
 </head>
@@ -228,6 +227,18 @@ async function renderSeats() {
     });
 
     container.appendChild(grid);
+
+    // Posiciona o botão CONFIRMAR alinhado às 2 últimas poltronas do lado direito
+    const button = document.getElementById("confirmarBtn");
+    const allSeats = container.querySelectorAll(".seat:not(.white, .blocked)");
+    if (allSeats.length >= 2) {
+        const lastRightSeats = Array.from(allSeats).slice(-2);
+        const lastSeatRect = lastRightSeats[lastRightSeats.length - 1].getBoundingClientRect();
+        const wrapperRect = wrapper.getBoundingClientRect();
+
+        button.style.top = (lastSeatRect.bottom - wrapperRect.top + 10) + "px"; // 10px abaixo
+        button.style.left = (lastSeatRect.right - wrapperRect.left - button.offsetWidth) + "px";
+    }
 
     progress = 100;
     progressBar.style.width = progress + "%";
