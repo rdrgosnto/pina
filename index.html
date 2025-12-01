@@ -1,79 +1,277 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Mapa de Ônibus</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Planner | Mapa</title>
+
 <style>
-  body { font-family: Arial, sans-serif; }
-  #bus-wrapper { position: relative; display: inline-block; }
-  #bus-container { display: grid; gap: 6px; padding: 20px; background: #f2f2f2; }
-  .seat { width: 38px; height: 38px; background: #4CAF50; color: #fff; display:flex; justify-content:center; align-items:center; border-radius:4px; font-size:14px; cursor:pointer; }
-  .blocked { background:#888 !important; cursor:not-allowed; }
-  .white { background:transparent !important; cursor:default; }
-  #confirmarBtn { position:absolute; padding:12px 22px; font-size:16px; cursor:pointer; border-radius:8px; border:none; background:#007bff; color:white; }
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    min-height: 100vh;
+    background: #fff;
+    position: relative;
+}
+
+.bus-container {
+    padding: 20px;
+    border: 3px solid #b0b0b0;
+    border-radius: 16px;
+    width: fit-content;
+    margin: 20px auto;
+    display: flex;
+    justify-content: center;
+    position: relative;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(5, 54px);
+    column-gap: 10px; 
+    row-gap: 14px;
+    justify-items: center;
+}
+
+.seat, .empty {
+    width: 54px;
+    height: 54px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 12px;
+    position: relative;
+}
+
+.seat {
+    background: #4CAF50;
+    border: 3px solid #4CAF50;
+    color: #fff;
+    font-weight: bold;
+}
+
+.seat::after {
+    content: "";
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 32px;
+    height: 14px;
+    border-radius: 8px;
+    background: #fff;
+    border: 3px solid #8c96b2;
+}
+
+.seat.white {
+    background: #fff;
+    border: 3px solid #ccc;
+    color: transparent;
+}
+
+.seat.white::after { 
+    border: 3px solid #ccc; 
+}
+
+.seat.blocked {
+    background: #6b6b6b;
+    border: 3px solid #6b6b6b;
+}
+
+.seat.selected {
+    background: #e74c3c;
+    border-color: #e74c3c;
+}
+
+.empty { background: transparent; }
+
+/* Barra de progresso fixa inferior */
+#progress-bar-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 8px; 
+    background: rgba(0,0,0,0.1);
+    z-index: 9999;
+}
+
+#progress-bar {
+    width: 0%;
+    height: 100%;
+    background: #4CAF50;
+    border-radius: 0;
+    transition: width 0.1s linear;
+}
+
+/* BOTÃO CONFIRMAR */
+#confirmarBtn {
+    width: 112px;
+    height: 54px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(0,0,0,0.2);
+    position: absolute;
+}
 </style>
 </head>
+
 <body>
 <div id="bus-wrapper">
-    <div id="bus-container"></div>
+    <div class="bus-container"></div>
+
+    <!-- Botão CONFIRMAR fora do container -->
     <button id="confirmarBtn">CONFIRMAR</button>
 </div>
 
+<!-- Barra de progresso -->
+<div id="progress-bar-container">
+    <div id="progress-bar"></div>
+</div>
+
 <script>
+let selectedSeat = null;
+
 async function loadJSON(url) {
-    const r = await fetch(url);
-    return await r.json();
+    try {
+        const res = await fetch(url);
+        return res.ok ? await res.json() : null;
+    } catch { return null; }
 }
 
-const params = new URLSearchParams(window.location.search);
-const bus = params.get("bus") || "0050";
-const turma = params.get("turma") || "";
-
-let config = null;
-let blocked = [];
-
-async function init() {
-    config = await loadJSON(`https://script.google.com/macros/s/AKfycbzw5N1tcOyFvwy3xNmPR9U1N9xqwiHjT1Efv-V_AHM/dev?bus=${bus}`);
-    blocked = turma ? await loadJSON(`https://script.google.com/macros/s/AKfycbzK1b3QfnN8O3NAu7nL2_f_peI6MqkRTxXGFKMcK0ho/dev?curso=${turma}`) : [];
-    renderSeats();
+function createSeat(value) {
+    const el = document.createElement("div");
+    if (value === null) el.className = "empty";
+    else if (value === "white") el.className = "seat white";
+    else {
+        el.className = "seat";
+        el.textContent = value.toString().padStart(2, "0");
+    }
+    return el;
 }
 
-function renderSeats() {
-    const container = document.getElementById("bus-container");
-    const wrapper = document.getElementById("bus-wrapper");
-    const button = document.getElementById("confirmarBtn");
+function selectSeat(el) {
+    if (el.classList.contains("selected")) {
+        el.classList.remove("selected");
+        selectedSeat = null;
+        return;
+    }
 
-    container.style.gridTemplateColumns = `repeat(${config.layout[0].length}, 40px)`;
-    container.innerHTML = "";
+    if (selectedSeat) selectedSeat.classList.remove("selected");
 
+    el.classList.add("selected");
+    selectedSeat = el;
+}
+
+async function renderSeats() {
+    const params = new URLSearchParams(window.location.search);
+    const busId = params.get("bus") || "0052";
+    const turma = params.get("turma") || "";
+
+    const progressBar = document.getElementById("progress-bar");
+    let progress = 0;
+
+    const interval = setInterval(() => {
+        if(progress < 95){
+            progress += 0.2; 
+            progressBar.style.width = progress + "%";
+        }
+    }, 16);
+
+    const config = await loadJSON(`./configs/${busId}.json`);
+    if (!config) return;
+    progress = 50;
+    progressBar.style.width = progress + "%";
+
+    const blocked = turma ? await loadJSON(`https://script.google.com/macros/s/.../exec?curso=${turma}`) : [];
     const blockedNumbers = blocked.map(s => s.poltrona);
+    progress = 80;
+    progressBar.style.width = progress + "%";
 
-    config.layout.forEach(row => {
-        row.forEach(num => {
-            const el = document.createElement("div");
+    const wrapper = document.getElementById("bus-wrapper");
+    const container = wrapper.querySelector(".bus-container");
 
-            if (num === null) {
-                el.className = "seat white";
-            } else {
-                el.className = "seat";
-                el.textContent = num.toString().padStart(2, "0");
+    const grid = document.createElement("div");
+    grid.className = "grid";
 
-                if (blockedNumbers.includes(num)) el.classList.add("blocked");
-            }
-            container.appendChild(el);
-        });
+    const totalSeats = config.layout.flat().length;
+    let loadedSeats = 0;
+
+    config.layout.flat().forEach(seat => {
+        const el = createSeat(seat);
+        if (seat !== null && seat !== "white") {
+            const num = seat.toString().padStart(2, "0");
+            if (blockedNumbers.includes(num)) el.classList.add("blocked");
+            else el.addEventListener("click", () => selectSeat(el));
+        }
+        grid.appendChild(el);
+        loadedSeats++;
+        const seatProgress = 80 + Math.round((loadedSeats / totalSeats) * 20);
+        if(seatProgress > progress) progress = seatProgress;
+        progressBar.style.width = progress + "%";
     });
 
-    setTimeout(() => {
-        const containerRect = container.getBoundingClientRect();
-        const wrapperRect = wrapper.getBoundingClientRect();
+    container.appendChild(grid);
 
-        button.style.top = (containerRect.height + 20) + "px";
-        button.style.left = (containerRect.width - button.offsetWidth) + "px";
-    }, 50);
+    // -----------------------------
+    // Posiciona o botão CONFIRMAR corretamente
+    // -----------------------------
+    const button = document.getElementById("confirmarBtn");
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    const relativeTop = containerRect.bottom - wrapperRect.top + 20; // 20px abaixo
+    const relativeLeft = containerRect.right - wrapperRect.left - button.offsetWidth; // à direita do container
+
+    button.style.top = relativeTop + "px";
+    button.style.left = relativeLeft + "px";
+
+    progress = 100;
+    progressBar.style.width = progress + "%";
+    clearInterval(interval);
+
+    setTimeout(() => {
+        const barContainer = document.getElementById("progress-bar-container");
+        barContainer.style.transition = "opacity 0.3s ease";
+        barContainer.style.opacity = 0;
+        setTimeout(() => barContainer.remove(), 300);
+    }, 300);
 }
 
-init();
+async function updateSeats() {
+    const params = new URLSearchParams(window.location.search);
+    const turma = params.get("turma") || "";
+    if (!turma) return;
+
+    const blocked = await loadJSON(`https://script.google.com/macros/s/.../exec?curso=${turma}`);
+    const blockedNumbers = blocked.map(s => s.poltrona);
+
+    document.querySelectorAll(".seat").forEach(seat => {
+        const num = seat.textContent;
+        if (blockedNumbers.includes(num)) {
+            seat.classList.add("blocked");
+            seat.onclick = null;
+            if (selectedSeat && selectedSeat.textContent === num) selectedSeat = null;
+            seat.classList.remove("selected");
+        } else {
+            seat.classList.remove("blocked");
+            seat.onclick = () => selectSeat(seat);
+        }
+    });
+}
+
+renderSeats().then(() => {
+    setInterval(updateSeats, 30000);
+});
 </script>
 </body>
 </html>
