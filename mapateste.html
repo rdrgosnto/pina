@@ -182,7 +182,7 @@ q("#confirmarBtn").addEventListener("click",async()=>{
     const url="https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/1b4f6536a25d47d5909b9ccac943a5e8/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=naqfy45S_5sWJoEHTCKIBUbvFpViVRGz4KOXMuyIffw";
 
     try{
-        const body = { poltrona, CURSO:curso, CPF2:cpf };
+        const body = { poltrona, CURSO:curso, cpf:cpf };
 
         const r = await fetch(url,{
             method:"POST",
