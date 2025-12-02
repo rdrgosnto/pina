@@ -6,7 +6,6 @@
 <title>Planner | Mapa</title>
 
 <style>
-/* (seu CSS está sem problemas – deixei igual) */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -137,7 +136,6 @@ async function loadJSON(url) {
         const res = await fetch(url);
         if (!res.ok) return null;
 
-        // Proteção contra JSON inválido
         return await res.json().catch(() => null);
 
     } catch {
@@ -180,7 +178,6 @@ async function renderSeats() {
     const progressBar = document.getElementById("progress-bar");
     let progress = 0;
 
-    // animação inicial
     const interval = setInterval(() => {
         if (progress < 95) {
             progress += 0.2;
@@ -188,7 +185,6 @@ async function renderSeats() {
         }
     }, 16);
 
-    // Carregar configuração do ônibus
     const config = await loadJSON(`./configs/${busId}.json`);
     if (!config || !config.layout) {
         clearInterval(interval);
@@ -198,7 +194,6 @@ async function renderSeats() {
 
     progressBar.style.width = "50%";
 
-    // Carregar bloqueados — AGORA SEGURO
     let blocked = turma
         ? await loadJSON(`https://script.google.com/macros/s/AKfycby6nfXn5tz0G7Cmf5SE5p4G11XMI-YhteAhf8qNzc6YFXUb2UezzPqIVz8yhEbsifqx/exec?curso=${turma}`)
         : [];
@@ -291,7 +286,7 @@ document.getElementById("confirmarBtn").addEventListener("click", async () => {
     const turma = new URLSearchParams(window.location.search).get("turma") || "";
     const poltrona = selectedSeat.textContent;
 
-    const url = "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/5496eb2ad8a74af9b5080744a0d24807/triggers/manual/paths/invoke?api-version=1";
+    const url = "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/5496eb2ad8a74af9b5080744a0d24807/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=KoClUQbjbcx8G9By-JcoWIyEb17CWvksL_bPqXFi22Q";
 
     try {
         const res = await fetch(url, {
