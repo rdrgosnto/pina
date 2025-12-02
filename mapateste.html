@@ -135,9 +135,7 @@ async function loadJSON(url) {
     try {
         const res = await fetch(url);
         if (!res.ok) return null;
-
         return await res.json().catch(() => null);
-
     } catch {
         return null;
     }
@@ -145,16 +143,12 @@ async function loadJSON(url) {
 
 function createSeat(value) {
     const el = document.createElement("div");
-
-    if (value === null) {
-        el.className = "empty";
-    } else if (value === "white") {
-        el.className = "seat white";
-    } else {
+    if (value === null) el.className = "empty";
+    else if (value === "white") el.className = "seat white";
+    else {
         el.className = "seat";
         el.textContent = value.toString().padStart(2, "0");
     }
-
     return el;
 }
 
@@ -194,12 +188,17 @@ async function renderSeats() {
 
     progressBar.style.width = "50%";
 
-    let blocked = turma
-        ? await loadJSON(`https://script.google.com/macros/s/AKfycby6nfXn5tz0G7Cmf5SE5p4G11XMI-YhteAhf8qNzc6YFXUb2UezzPqIVz8yhEbsifqx/exec?curso=${turma}`)
-        : [];
+    // -----------------------------
+    // Buscar poltronas bloqueadas via Power Automate
+    // -----------------------------
+    let blocked = [];
+    if (turma) {
+        const urlPA = `https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/fc2a8382f65e4d6babd3b474ff922f31/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ECbWzq2eELLbMlCdX8gJq1SygtSQ7s2IqKzdKlMBZo4&turma=${turma}`;
+        blocked = await loadJSON(urlPA);
+    }
 
     if (!Array.isArray(blocked)) blocked = [];
-    const blockedNumbers = blocked.map(s => s.poltrona);
+    const blockedNumbers = blocked.map(s => s.ID.toString().padStart(2,"0"));
 
     progressBar.style.width = "80%";
 
@@ -210,25 +209,20 @@ async function renderSeats() {
     grid.className = "grid";
 
     const layoutFlat = Array.isArray(config.layout) ? config.layout.flat() : [];
-
     const totalSeats = layoutFlat.length;
     let loadedSeats = 0;
 
     layoutFlat.forEach(seat => {
         const el = createSeat(seat);
-
         if (seat !== null && seat !== "white") {
             const num = seat.toString().padStart(2, "0");
-
             if (blockedNumbers.includes(num)) {
                 el.classList.add("blocked");
             } else {
                 el.addEventListener("click", () => selectSeat(el));
             }
         }
-
         grid.appendChild(el);
-
         loadedSeats++;
         progressBar.style.width = (80 + (loadedSeats / totalSeats) * 20) + "%";
     });
@@ -236,7 +230,6 @@ async function renderSeats() {
     container.appendChild(grid);
 
     clearInterval(interval);
-
     progressBar.style.width = "100%";
 
     setTimeout(() => {
@@ -277,7 +270,6 @@ document.getElementById("confirmarBtn").addEventListener("click", async () => {
     if (!cpf) return;
 
     cpf = cpf.replace(/\D/g, '').padStart(11, '0');
-
     if (!validarCPF(cpf)) {
         alert("CPF inválido.");
         return;
