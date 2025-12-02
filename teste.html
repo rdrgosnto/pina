@@ -1,79 +1,50 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Teste Poltronas Ocupadas</title>
-    <style>
-        body { font-family: Arial; padding: 20px; }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(8, 60px);
-            gap: 10px;
-        }
-
-        button {
-            width: 60px;
-            height: 40px;
-            border-radius: 6px;
-            border: none;
-            background: #4CAF50;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        button.ocupada {
-            background: gray;
-            cursor: not-allowed;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Teste Power Automate</title>
 </head>
 <body>
-
-<h2>Mapa de Poltronas (Teste GET)</h2>
-
-<div id="poltronas" class="grid"></div>
+<h2>Teste de Poltronas Ocupadas</h2>
+<p id="resultado">Carregando...</p>
 
 <script>
-    // 🔗 URL do seu fluxo GET do Power Automate
-    const urlGet = "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/fc2a8382f65e4d6babd3b474ff922f31/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ECbWzq2eELLbMlCdX8gJq1SygtSQ7s2IqKzdKlMBZo4";
+async function testarPA() {
+    const turma = "AAL"; // Substitua pela turma que deseja testar
+    const urlPOST = "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/fc2a8382f65e4d6babd3b474ff922f31/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ECbWzq2eELLbMlCdX8gJq1SygtSQ7s2IqKzdKlMBZo4";
 
-    // Criar 40 poltronas na tela
-    function gerarPoltronas() {
-        const container = document.getElementById("poltronas");
-        for (let i = 1; i <= 40; i++) {
-            let btn = document.createElement("button");
-            btn.id = "p" + i;
-            btn.innerText = i.toString().padStart(2, '0');
-            container.appendChild(btn);
-        }
-    }
+    try {
+        const res = await fetch(urlPOST, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ turma })
+        });
 
-    // Buscar dados do Power Automate e marcar poltronas ocupadas
-    async function carregarPoltronas() {
-        try {
-            let resposta = await fetch(urlGet);
-            let dados = await resposta.json();
+        const data = await res.json();
 
-            console.log("Dados recebidos do Power Automate:", dados);
+        document.getElementById("resultado").textContent = JSON.stringify(data, null, 2);
 
-            dados.forEach(item => {
-                let num = parseInt(item["ID"]); // agora usando a coluna ID
-                if (!isNaN(num)) {
-                    let btn = document.getElementById("p" + num);
-                    if (btn) btn.classList.add("ocupada");
-                }
+        // Exibir cada poltrona ocupada separadamente
+        if (Array.isArray(data) && data.length > 0) {
+            const list = document.createElement("ul");
+            data.forEach(item => {
+                const li = document.createElement("li");
+                li.textContent = "Poltrona ocupada: " + item.ID;
+                list.appendChild(li);
             });
-
-        } catch (erro) {
-            console.error("Erro ao carregar dados:", erro);
+            document.body.appendChild(list);
+        } else {
+            document.body.appendChild(document.createTextNode("Nenhuma poltrona ocupada retornada."));
         }
+
+    } catch (e) {
+        document.getElementById("resultado").textContent = "Erro ao comunicar com o Power Automate.";
+        console.error(e);
     }
+}
 
-    gerarPoltronas();
-    carregarPoltronas();
+testarPA();
 </script>
-
 </body>
 </html>
