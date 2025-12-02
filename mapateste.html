@@ -128,7 +128,6 @@ body {
 </div>
 
 <script>
-
 let selectedSeat = null;
 
 async function loadJSON(url) {
@@ -143,16 +142,12 @@ async function loadJSON(url) {
 
 function createSeat(value) {
     const el = document.createElement("div");
-
-    if (value === null) {
-        el.className = "empty";
-    } else if (value === "white") {
-        el.className = "seat white";
-    } else {
+    if (value === null) el.className = "empty";
+    else if (value === "white") el.className = "seat white";
+    else {
         el.className = "seat";
         el.textContent = value.toString().padStart(2, "0");
     }
-
     return el;
 }
 
@@ -168,16 +163,12 @@ function selectSeat(el) {
 }
 
 async function renderSeats() {
-
     const params = new URLSearchParams(window.location.search);
     const busId = params.get("bus") || "0052";
-
-    // Pegando o curso da URL
     const curso = params.get("CURSO") || params.get("curso") || "";
 
     const progressBar = document.getElementById("progress-bar");
     let progress = 0;
-
     const interval = setInterval(() => {
         if (progress < 95) {
             progress += 0.2;
@@ -194,54 +185,46 @@ async function renderSeats() {
 
     progressBar.style.width = "50%";
 
-    // 🔄 BUSCAR TODAS AS POLTRONAS PELO POWER AUTOMATE
-    let ocupadas = [];
+    //--------------------------------------------
+    // 🔄 GET: BUSCAR POLTRONAS OCUPADAS (CURSO)
+    //--------------------------------------------
+    let response = { poltronas: [] };
     if (curso) {
-        const allSeats = await loadJSON(
+        response = await loadJSON(
             `https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/239ef024d32946f99a66585bed86d236/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ItjHZInk4ZgqUycsWShgWkI1PEphNs_bQhmpReiFwuA`
         );
-        if (Array.isArray(allSeats)) {
-            // Filtra apenas os registros do curso selecionado
-            ocupadas = allSeats.filter(x => x.CURSO === curso);
-        }
     }
 
-    const blockedNumbers = ocupadas.map(x => x.ID.padStart(2, "0"));
+    const allSeats = Array.isArray(response.poltronas) ? response.poltronas : [];
+    // Filtrar pelo curso exato
+    const blockedNumbers = allSeats
+        .filter(x => x.CURSO === curso)
+        .map(x => x.ID.padStart(2, "0"));
 
     progressBar.style.width = "80%";
 
     const wrapper = document.getElementById("bus-wrapper");
     const container = wrapper.querySelector(".bus-container");
-
     const grid = document.createElement("div");
     grid.className = "grid";
 
     const layoutFlat = Array.isArray(config.layout) ? config.layout.flat() : [];
-
     const totalSeats = layoutFlat.length;
     let loadedSeats = 0;
 
     layoutFlat.forEach(seat => {
         const el = createSeat(seat);
-
         if (seat !== null && seat !== "white") {
             const num = seat.toString().padStart(2, "0");
-
-            if (blockedNumbers.includes(num)) {
-                el.classList.add("blocked");
-            } else {
-                el.addEventListener("click", () => selectSeat(el));
-            }
+            if (blockedNumbers.includes(num)) el.classList.add("blocked");
+            else el.addEventListener("click", () => selectSeat(el));
         }
-
         grid.appendChild(el);
-
         loadedSeats++;
         progressBar.style.width = (80 + (loadedSeats / totalSeats) * 20) + "%";
     });
 
     container.appendChild(grid);
-
     clearInterval(interval);
     progressBar.style.width = "100%";
 
@@ -258,31 +241,25 @@ async function renderSeats() {
 function validarCPF(cpf) {
     cpf = cpf.replace(/\D/g, '').padStart(11, '0');
     if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
-
     let soma = 0;
     for (let i = 0; i < 9; i++) soma += parseInt(cpf[i]) * (10 - i);
     let resto = (soma * 10) % 11;
     if (resto === 10) resto = 0;
     if (resto !== parseInt(cpf[9])) return false;
-
     soma = 0;
     for (let i = 0; i < 10; i++) soma += parseInt(cpf[i]) * (11 - i);
     resto = (soma * 10) % 11;
     if (resto === 10) resto = 0;
-
     return resto === parseInt(cpf[10]);
 }
 
 document.getElementById("confirmarBtn").addEventListener("click", async () => {
-    if (!selectedSeat) {
-        alert("Selecione uma poltrona.");
-        return;
-    }
+    if (!selectedSeat) { alert("Selecione uma poltrona."); return; }
 
     let cpf = prompt("Digite seu CPF (apenas números):");
     if (!cpf) return;
-
     cpf = cpf.replace(/\D/g, '').padStart(11, '0');
+    if (!validarCPF(cpf)) { alert("CPF inválido."); return; }
 
     const params = new URLSearchParams(window.location.search);
     const curso = params.get("CURSO") || params.get("curso") || "";
@@ -311,7 +288,6 @@ document.getElementById("confirmarBtn").addEventListener("click", async () => {
 });
 
 renderSeats();
-
 </script>
 </body>
 </html>
