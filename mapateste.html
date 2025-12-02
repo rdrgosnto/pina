@@ -69,7 +69,7 @@ q("#confirmarBtn").addEventListener("click",async()=>{
     if(!selectedSeat){alert("Selecione uma poltrona");return}
     let cpf=prompt("CPF (somente números)");
     if(!cpf)return;cpf=cpf.replace(/\D/g,'').padStart(11,'0');
-    if(!validarCPF(cpf)){alert("CPF inválido.");return}
+    if(!validarCPF(cpf)){alert("CPF não encontrado");return}
     const p=new URLSearchParams(window.location.search);
     const curso=p.get("CURSO")||p.get("curso")||"";
     const poltrona=selectedSeat.textContent;
