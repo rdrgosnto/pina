@@ -171,7 +171,9 @@ async function renderSeats() {
 
     const params = new URLSearchParams(window.location.search);
     const busId = params.get("bus") || "0052";
-    const curso = params.get("curso") || "";
+
+    // 🟩 PEGAR CURSO (maiúsculo)
+    const curso = params.get("CURSO") || params.get("curso") || "";
 
     const progressBar = document.getElementById("progress-bar");
     let progress = 0;
@@ -193,19 +195,19 @@ async function renderSeats() {
     progressBar.style.width = "50%";
 
     //--------------------------------------------
-    // 🔄 GET: BUSCAR POLTRONAS OCUPADAS
+    // 🔄 GET: BUSCAR POLTRONAS OCUPADAS (CURSO)
     //--------------------------------------------
     let ocupadas = [];
 
     if (curso) {
         ocupadas = await loadJSON(
-            `https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/239ef024d32946f99a66585bed86d236/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ItjHZInk4ZgqUycsWShgWkI1PEphNs_bQhmpReiFwuA&curso=${curso}`
+            `https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/239ef024d32946f99a66585bed86d236/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ItjHZInk4ZgqUycsWShgWkI1PEphNs_bQhmpReiFwuA&CURSO=${curso}`
         );
     }
 
     if (!Array.isArray(ocupadas)) ocupadas = [];
 
-    // 🟥 Extrair somente ID
+    // Extrair ID da planilha
     const blockedNumbers = ocupadas.map(x => x.ID.padStart(2, "0"));
 
     progressBar.style.width = "80%";
@@ -289,7 +291,8 @@ document.getElementById("confirmarBtn").addEventListener("click", async () => {
         return;
     }
 
-    const curso = new URLSearchParams(window.location.search).get("curso") || "";
+    const params = new URLSearchParams(window.location.search);
+    const curso = params.get("CURSO") || params.get("curso") || "";
     const poltrona = selectedSeat.textContent;
 
     const url = "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/5496eb2ad8a74af9b5080744a0d24807/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=KoClUQbjbcx8G9By-JcoWIyEb17CWvksL_bPqXFi22Q";
@@ -298,7 +301,7 @@ document.getElementById("confirmarBtn").addEventListener("click", async () => {
         const res = await fetch(url, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ poltrona, curso, cpf })
+            body: JSON.stringify({ poltrona, CURSO: curso, cpf })
         });
 
         if (res.ok) {
