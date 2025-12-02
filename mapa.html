@@ -4,117 +4,24 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Planner | Mapa</title>
-
 <style>
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-    min-height: 100vh;
-    background: #fff;
-    position: relative;
-}
-#bus-wrapper {
-    transform: scale(0.9);
-    transform-origin: top center;
-    display: none;
-}
-.bus-container {
-    padding: 20px;
-    border: 3px solid #b0b0b0;
-    border-radius: 16px;
-    width: fit-content;
-    margin: 20px auto;
-    display: flex;
-    justify-content: center;
-    position: relative;
-}
-.grid {
-    display: grid;
-    grid-template-columns: repeat(5, 54px);
-    column-gap: 10px;
-    row-gap: 14px;
-    justify-items: center;
-}
-.seat, .empty {
-    width: 54px;
-    height: 54px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 12px;
-    position: relative;
-}
-.seat {
-    background: #4CAF50;
-    border: 3px solid #4CAF50;
-    color: #fff;
-    font-weight: bold;
-}
-.seat::after {
-    content: "";
-    position: absolute;
-    bottom: -8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 32px;
-    height: 14px;
-    border-radius: 8px;
-    background: #fff;
-    border: 3px solid #8c96b2;
-}
-.seat.white {
-    background: #fff;
-    border: 3px solid #ccc;
-    color: transparent;
-}
-.seat.white::after {
-    border: 3px solid #ccc;
-}
-.seat.blocked {
-    background: #6b6b6b;
-    border: 3px solid #6b6b6b;
-}
-.seat.selected {
-    background: #e74c3c;
-    border-color: #e74c3c;
-}
-.empty { background: transparent; }
-#progress-bar-container {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 8px;
-    background: rgba(0,0,0,0.1);
-    z-index: 9999;
-}
-#progress-bar {
-    width: 0%;
-    height: 100%;
-    background: #4CAF50;
-    transition: width 0.1s linear;
-}
-#confirmarBtn {
-    width: 112px;
-    height: 54px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    font-size: 16px;
-    font-weight: bold;
-    border-radius: 12px;
-    cursor: pointer;
-    position: absolute;
-    bottom: -64px;
-    right: 20px;
-}
+body { font-family: Arial, sans-serif; margin:0; padding:0; display:flex; justify-content:center; flex-direction:column; min-height:100vh; background:#fff; }
+#bus-wrapper { transform:scale(0.9); transform-origin:top center; display:none; }
+.bus-container { padding:20px; border:3px solid #b0b0b0; border-radius:16px; width:fit-content; margin:20px auto; display:flex; justify-content:center; position:relative; }
+.grid { display:grid; grid-template-columns:repeat(5,54px); column-gap:10px; row-gap:14px; justify-items:center; }
+.seat, .empty { width:54px; height:54px; display:flex; justify-content:center; align-items:center; border-radius:12px; position:relative; }
+.seat { background:#4CAF50; border:3px solid #4CAF50; color:#fff; font-weight:bold; }
+.seat::after { content:""; position:absolute; bottom:-8px; left:50%; transform:translateX(-50%); width:32px; height:14px; border-radius:8px; background:#fff; border:3px solid #8c96b2; }
+.seat.white { background:#fff; border:3px solid #ccc; color:transparent; }
+.seat.white::after { border:3px solid #ccc; }
+.seat.blocked { background:#6b6b6b; border:3px solid #6b6b6b; }
+.seat.selected { background:#e74c3c; border-color:#e74c3c; }
+.empty { background:transparent; }
+#progress-bar-container { position:fixed; bottom:0; left:0; width:100%; height:8px; background:rgba(0,0,0,0.1); z-index:9999; }
+#progress-bar { width:0%; height:100%; background:#4CAF50; transition:width 0.1s linear; }
+#confirmarBtn { width:112px; height:54px; background-color:#4CAF50; color:white; border:none; font-size:16px; font-weight:bold; border-radius:12px; cursor:pointer; position:absolute; bottom:-64px; right:20px; }
 </style>
 </head>
-
 <body>
 
 <div id="bus-wrapper">
@@ -130,161 +37,104 @@ body {
 <script>
 let selectedSeat = null;
 
-async function loadJSON(url) {
-    try {
-        const res = await fetch(url);
-        if (!res.ok) return null;
-        return await res.json().catch(() => null);
-    } catch {
-        return null;
-    }
+async function loadJSON(url){
+    try { const res = await fetch(url); if(!res.ok) return null; return await res.json().catch(()=>null); } 
+    catch { return null; }
 }
 
-function createSeat(value) {
+function createSeat(value){
     const el = document.createElement("div");
-    if (value === null) el.className = "empty";
-    else if (value === "white") el.className = "seat white";
-    else {
-        el.className = "seat";
-        el.textContent = value.toString().padStart(2, "0");
-    }
+    if(value===null) el.className="empty";
+    else if(value==="white") el.className="seat white";
+    else { el.className="seat"; el.textContent=value.toString().padStart(2,"0"); }
     return el;
 }
 
-function selectSeat(el) {
-    if (el.classList.contains("selected")) {
-        el.classList.remove("selected");
-        selectedSeat = null;
-        return;
-    }
-    if (selectedSeat) selectedSeat.classList.remove("selected");
+function selectSeat(el){
+    if(el.classList.contains("selected")){ el.classList.remove("selected"); selectedSeat=null; return; }
+    if(selectedSeat) selectedSeat.classList.remove("selected");
     el.classList.add("selected");
-    selectedSeat = el;
+    selectedSeat=el;
 }
 
-async function renderSeats() {
-    const params = new URLSearchParams(window.location.search);
-    const busId = params.get("bus") || "0052";
-    const curso = params.get("CURSO") || params.get("curso") || "";
+function validarCPF(cpf){
+    cpf=cpf.replace(/\D/g,'').padStart(11,'0');
+    if(cpf.length!==11 || /^(\d)\1+$/.test(cpf)) return false;
+    let soma=0;
+    for(let i=0;i<9;i++) soma+=parseInt(cpf[i])*(10-i);
+    let resto=(soma*10)%11; if(resto===10) resto=0; if(resto!==parseInt(cpf[9])) return false;
+    soma=0; for(let i=0;i<10;i++) soma+=parseInt(cpf[i])*(11-i);
+    resto=(soma*10)%11; if(resto===10) resto=0;
+    return resto===parseInt(cpf[10]);
+}
 
-    const progressBar = document.getElementById("progress-bar");
-    let progress = 0;
-    const interval = setInterval(() => {
-        if (progress < 95) {
-            progress += 0.2;
-            progressBar.style.width = progress + "%";
-        }
-    }, 16);
+async function renderSeats(){
+    const params=new URLSearchParams(window.location.search);
+    const busId=params.get("bus")||"0052";
+    const curso=params.get("CURSO")||params.get("curso")||"";
 
-    const config = await loadJSON(`./configs/${busId}.json`);
-    if (!config || !config.layout) {
-        clearInterval(interval);
-        alert("Erro ao carregar o layout do ônibus.");
-        return;
-    }
+    const progressBar=document.getElementById("progress-bar");
+    let progress=0;
+    const interval=setInterval(()=>{if(progress<95){progress+=0.2;progressBar.style.width=progress+"%";}},16);
 
-    progressBar.style.width = "50%";
+    const config=await loadJSON(`./configs/${busId}.json`);
+    if(!config||!config.layout){ clearInterval(interval); alert("Erro ao carregar o layout do ônibus."); return; }
+    progressBar.style.width="50%";
 
-    //--------------------------------------------
-    // 🔄 GET: BUSCAR POLTRONAS OCUPADAS (CURSO)
-    //--------------------------------------------
-    let response = { poltronas: [] };
-    if (curso) {
-        response = await loadJSON(
-            `https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/239ef024d32946f99a66585bed86d236/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ItjHZInk4ZgqUycsWShgWkI1PEphNs_bQhmpReiFwuA`
-        );
-    }
+    let response={poltronas:[]};
+    if(curso) response=await loadJSON(`https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/239ef024d32946f99a66585bed86d236/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ItjHZInk4ZgqUycsWShgWkI1PEphNs_bQhmpReiFwuA`);
 
-    const allSeats = Array.isArray(response.poltronas) ? response.poltronas : [];
-    // Filtrar pelo curso exato
-    const blockedNumbers = allSeats
-        .filter(x => x.CURSO === curso)
-        .map(x => x.ID.padStart(2, "0"));
+    const blockedNumbers=(Array.isArray(response.poltronas)?response.poltronas:[])
+        .filter(x=>x.CURSO===curso)
+        .map(x=>x.ID.padStart(2,"0"));
 
-    progressBar.style.width = "80%";
+    progressBar.style.width="80%";
 
-    const wrapper = document.getElementById("bus-wrapper");
-    const container = wrapper.querySelector(".bus-container");
-    const grid = document.createElement("div");
-    grid.className = "grid";
+    const wrapper=document.getElementById("bus-wrapper");
+    const container=wrapper.querySelector(".bus-container");
+    const grid=document.createElement("div"); grid.className="grid";
 
-    const layoutFlat = Array.isArray(config.layout) ? config.layout.flat() : [];
-    const totalSeats = layoutFlat.length;
-    let loadedSeats = 0;
+    const layoutFlat=Array.isArray(config.layout)?config.layout.flat():[];
+    const totalSeats=layoutFlat.length;
+    let loadedSeats=0;
 
-    layoutFlat.forEach(seat => {
-        const el = createSeat(seat);
-        if (seat !== null && seat !== "white") {
-            const num = seat.toString().padStart(2, "0");
-            if (blockedNumbers.includes(num)) el.classList.add("blocked");
-            else el.addEventListener("click", () => selectSeat(el));
+    layoutFlat.forEach(seat=>{
+        const el=createSeat(seat);
+        if(seat!==null && seat!=="white"){
+            const num=seat.toString().padStart(2,"0");
+            if(blockedNumbers.includes(num)) el.classList.add("blocked");
+            else el.addEventListener("click",()=>selectSeat(el));
         }
         grid.appendChild(el);
         loadedSeats++;
-        progressBar.style.width = (80 + (loadedSeats / totalSeats) * 20) + "%";
+        progressBar.style.width=(80+(loadedSeats/totalSeats)*20)+"%";
     });
 
     container.appendChild(grid);
     clearInterval(interval);
-    progressBar.style.width = "100%";
-
-    setTimeout(() => {
-        document.getElementById("progress-bar-container").style.opacity = 0;
-        setTimeout(() => {
-            document.getElementById("progress-bar-container").remove();
-        }, 300);
-    }, 300);
-
-    wrapper.style.display = "block";
+    progressBar.style.width="100%";
+    setTimeout(()=>{ document.getElementById("progress-bar-container").style.opacity=0; setTimeout(()=>document.getElementById("progress-bar-container").remove(),300); },300);
+    wrapper.style.display="block";
 }
 
-function validarCPF(cpf) {
-    cpf = cpf.replace(/\D/g, '').padStart(11, '0');
-    if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
-    let soma = 0;
-    for (let i = 0; i < 9; i++) soma += parseInt(cpf[i]) * (10 - i);
-    let resto = (soma * 10) % 11;
-    if (resto === 10) resto = 0;
-    if (resto !== parseInt(cpf[9])) return false;
-    soma = 0;
-    for (let i = 0; i < 10; i++) soma += parseInt(cpf[i]) * (11 - i);
-    resto = (soma * 10) % 11;
-    if (resto === 10) resto = 0;
-    return resto === parseInt(cpf[10]);
-}
+document.getElementById("confirmarBtn").addEventListener("click",async()=>{
+    if(!selectedSeat){ alert("Selecione uma poltrona."); return; }
+    let cpf=prompt("Digite seu CPF (apenas números):");
+    if(!cpf) return;
+    cpf=cpf.replace(/\D/g,'').padStart(11,'0');
+    if(!validarCPF(cpf)){ alert("CPF inválido."); return; }
 
-document.getElementById("confirmarBtn").addEventListener("click", async () => {
-    if (!selectedSeat) { alert("Selecione uma poltrona."); return; }
+    const params=new URLSearchParams(window.location.search);
+    const curso=params.get("CURSO")||params.get("curso")||"";
+    const poltrona=selectedSeat.textContent;
 
-    let cpf = prompt("Digite seu CPF (apenas números):");
-    if (!cpf) return;
-    cpf = cpf.replace(/\D/g, '').padStart(11, '0');
-    if (!validarCPF(cpf)) { alert("CPF inválido."); return; }
+    const url="https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/5496eb2ad8a74af9b5080744a0d24807/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=KoClUQbjbcx8G9By-JcoWIyEb17CWvksL_bPqXFi22Q";
 
-    const params = new URLSearchParams(window.location.search);
-    const curso = params.get("CURSO") || params.get("curso") || "";
-    const poltrona = selectedSeat.textContent;
-
-    const url = "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/5496eb2ad8a74af9b5080744a0d24807/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=KoClUQbjbcx8G9By-JcoWIyEb17CWvksL_bPqXFi22Q";
-
-    try {
-        const res = await fetch(url, {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ poltrona, CURSO: curso, cpf })
-        });
-
-        if (res.ok) {
-            alert("Poltrona selecionada com sucesso!");
-            setTimeout(() => location.reload(), 4000);
-        } else {
-            alert("Erro ao encaminhar os dados.");
-        }
-
-    } catch(e) {
-        alert("Erro de comunicação.");
-        console.error(e);
-    }
+    try{
+        const res=await fetch(url,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({poltrona,CURSO:curso,cpf}) });
+        if(res.ok){ alert("Poltrona selecionada com sucesso!"); setTimeout(()=>location.reload(),4000); }
+        else alert("Erro ao encaminhar os dados.");
+    } catch(e){ alert("Erro de comunicação."); console.error(e); }
 });
 
 renderSeats();
