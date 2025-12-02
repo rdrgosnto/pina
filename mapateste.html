@@ -142,14 +142,12 @@ async function loadJSON(url) {
 
 function createSeat(value) {
     const el = document.createElement("div");
-
     if (value === null) el.className = "empty";
     else if (value === "white") el.className = "seat white";
     else {
         el.className = "seat";
         el.textContent = value.toString().padStart(2,"0");
     }
-
     return el;
 }
 
@@ -194,7 +192,6 @@ async function renderSeats() {
         if(progress<95){progress+=0.2; progressBar.style.width=progress+"%";}
     },16);
 
-    // layout do ônibus
     const config = await loadJSON(`./configs/${busId}.json`);
     if(!config||!config.layout){
         clearInterval(interval);
@@ -203,11 +200,11 @@ async function renderSeats() {
     }
     progressBar.style.width="50%";
 
-    // GET poltronas ocupadas via Power Automate
+    // GET poltronas ocupadas via Power Automate (filtrando pela turma)
     const paURL = "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/fc2a8382f65e4d6babd3b474ff922f31/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ECbWzq2eELLbMlCdX8gJq1SygtSQ7s2IqKzdKlMBZo4";
     let blocked = await loadJSON(`${paURL}?turma=${turma}`);
     if(!Array.isArray(blocked)) blocked = [];
-    const blockedNumbers = blocked.map(s=>s.ID);
+    const blockedNumbers = blocked.map(s => s.ID);
 
     progressBar.style.width="80%";
 
@@ -224,60 +221,3 @@ async function renderSeats() {
     layoutFlat.forEach(seat=>{
         const el = createSeat(seat);
         if(seat!==null && seat!=="white"){
-            const num = seat.toString().padStart(2,"0");
-            if(blockedNumbers.includes(num)) el.classList.add("blocked");
-            else el.addEventListener("click",()=>selectSeat(el));
-        }
-        grid.appendChild(el);
-        loadedSeats++;
-        progressBar.style.width=(80+(loadedSeats/totalSeats)*20)+"%";
-    });
-
-    container.appendChild(grid);
-
-    clearInterval(interval);
-    progressBar.style.width="100%";
-
-    setTimeout(()=>{
-        document.getElementById("progress-bar-container").style.opacity=0;
-        setTimeout(()=>{document.getElementById("progress-bar-container").remove();},300);
-    },300);
-
-    wrapper.style.display="block";
-}
-
-document.getElementById("confirmarBtn").addEventListener("click", async ()=>{
-    if(!selectedSeat){ alert("Selecione uma poltrona."); return; }
-
-    let cpf = prompt("Digite seu CPF (apenas números):");
-    if(!cpf) return;
-
-    cpf = cpf.replace(/\D/g,'').padStart(11,'0');
-    if(!validarCPF(cpf)){ alert("CPF inválido."); return; }
-
-    const turma = new URLSearchParams(window.location.search).get("turma") || "";
-    const poltrona = selectedSeat.textContent;
-
-    // POST para Power Automate
-    const urlPOST = "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/5496eb2ad8a74af9b5080744a0d24807/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=KoClUQbjbcx8G9By-JcoWIyEb17CWvksL_bPqXFi22Q";
-
-    try {
-        const res = await fetch(urlPOST,{
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({ poltrona, curso: turma, cpf })
-        });
-        const data = await res.json();
-        if(data.success) alert("Poltrona confirmada!");
-        else alert("Erro: "+data.message);
-        setTimeout(()=>location.reload(),4000);
-    } catch(e){
-        alert("Erro de comunicação.");
-        console.error(e);
-    }
-});
-
-renderSeats();
-</script>
-</body>
-</html>
