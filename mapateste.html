@@ -194,8 +194,11 @@ async function renderSeats() {
 
     progressBar.style.width = "50%";
 
+    //--------------------------------------------
+    // 🔄 ALTERAÇÃO ÚNICA: AGORA USA POWER AUTOMATE
+    //--------------------------------------------
     let blocked = turma
-        ? await loadJSON(`https://script.google.com/macros/s/AKfycby6nfXn5tz0G7Cmf5SE5p4G11XMI-YhteAhf8qNzc6YFXUb2UezzPqIVz8yhEbsifqx/exec?curso=${turma}`)
+        ? await loadJSON(`https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/239ef024d32946f99a66585bed86d236/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ItjHZInk4ZgqUycsWShgWkI1PEphNs_bQhmpReiFwuA&curso=${turma}`)
         : [];
 
     if (!Array.isArray(blocked)) blocked = [];
