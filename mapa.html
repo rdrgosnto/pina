@@ -4,204 +4,160 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Planner | Mapa</title>
+
 <style>
-body{font-family:Arial,sans-serif;margin:0;padding:0;display:flex;justify-content:center;flex-direction:column;min-height:100vh;background:#fff;position:relative}
-#bus-wrapper{transform:scale(0.9);transform-origin:top center;display:none}
-.bus-container{padding:20px;border:3px solid #b0b0b0;border-radius:16px;width:fit-content;margin:20px auto;display:flex;justify-content:center;position:relative}
-.grid{display:grid;grid-template-columns:repeat(5,54px);column-gap:10px;row-gap:14px;justify-items:center}
-.seat,.empty{width:54px;height:54px;display:flex;justify-content:center;align-items:center;border-radius:12px;position:relative}
+body{font-family:Arial,sans-serif;margin:0;padding:0;display:flex;flex-direction:column;min-height:100vh;justify-content:center;background:#fff}
+#bus-wrapper{transform:scale(.9);transform-origin:top center;display:none}
+.bus-container{padding:20px;border:3px solid #b0b0b0;border-radius:16px;width:fit-content;margin:20px auto;position:relative}
+.grid{display:grid;grid-template-columns:repeat(5,54px);column-gap:10px;row-gap:14px}
+.seat,.empty{width:54px;height:54px;display:flex;align-items:center;justify-content:center;border-radius:12px;position:relative}
 .seat{background:#4CAF50;border:3px solid #4CAF50;color:#fff;font-weight:bold}
 .seat::after{content:"";position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);width:32px;height:14px;border-radius:8px;background:#fff;border:3px solid #8c96b2}
 .seat.white{background:#fff;border:3px solid #ccc;color:transparent}
-.seat.white::after{border:3px solid #ccc}
-.seat.blocked{background:#6b6b6b;border:3px solid #6b6b6b;color:#fff !important}
+.seat.white::after{border-color:#ccc}
+.seat.blocked{background:#6b6b6b;border-color:#6b6b6b;color:#fff!important}
 .seat.selected{background:#e74c3c;border-color:#e74c3c}
 .empty{background:transparent}
-#progress-bar-container{position:fixed;bottom:0;left:0;width:100%;height:8px;background:rgba(0,0,0,0.1);z-index:9999}
-#progress-bar{width:0%;height:100%;background:#4CAF50;transition:width 0.1s linear}
+#progress-bar-container{position:fixed;bottom:0;left:0;width:100%;height:8px;background:rgba(0,0,0,.1);z-index:9999}
+#progress-bar{width:0;height:100%;background:#4CAF50;transition:width .1s linear}
 #confirmarBtn{width:112px;height:54px;background:#4CAF50;color:#fff;border:none;font-size:16px;font-weight:bold;border-radius:12px;cursor:pointer;position:absolute;bottom:-64px;right:20px}
 </style>
+
 </head>
 <body>
-<div id="bus-wrapper"><div class="bus-container"><button id="confirmarBtn">CONFIRMAR</button></div></div>
+
+<div id="bus-wrapper">
+    <div class="bus-container">
+        <button id="confirmarBtn">CONFIRMAR</button>
+    </div>
+</div>
+
 <div id="progress-bar-container"><div id="progress-bar"></div></div>
 
 <script>
-let selectedSeat=null;
-let reservedByCPF=[]; // <-- controla CPFs já existentes
-let blockedSeats=[];  // <-- poltronas ocupadas
-const busWrapper=document.getElementById("bus-wrapper");
-const progressBar=document.getElementById("progress-bar");
-const progressContainer=document.getElementById("progress-bar-container");
 const q=(s,d=document)=>d.querySelector(s);
+const progressBar=q("#progress-bar"), progressContainer=q("#progress-bar-container");
+let selectedSeat=null, reservedByCPF=[], blockedSeats=[];
 
-// ---------- UTIL ----------
-const fetchJSON=async url=>{try{const r=await fetch(url);if(!r.ok)return null;return await r.json().catch(()=>null)}catch{return null}};
-const createSeat=v=>{
-    const e=document.createElement("div");
-    if(v===null) e.className="empty";
-    else if(v==="white") e.className="seat white";
-    else{
-        e.className="seat";
-        e.textContent=v.toString().padStart(2,"0");
-    }
-    return e;
-};
-const selectSeat=e=>{
-    if(e.classList.contains("blocked")) return; // segurança visual extra
-    if(e.classList.contains("selected")){
-        e.classList.remove("selected");
-        selectedSeat=null;
-        return;
-    }
-    if(selectedSeat) selectedSeat.classList.remove("selected");
-    e.classList.add("selected");
-    selectedSeat=e;
+// ------------------- UTIL -------------------
+const fetchJSON=async url=>{
+    try{const r=await fetch(url);return r.ok?await r.json().catch(()=>null):null;}
+    catch{return null;}
 };
 
 const validarCPF=cpf=>{
     cpf=cpf.replace(/\D/g,'').padStart(11,'0');
     if(cpf.length!==11||/^(\d)\1+$/.test(cpf))return false;
-    let s=0;
-    for(let i=0;i<9;i++)s+=parseInt(cpf[i])*(10-i);
-    let r=(s*10)%11;
-    if(r===10)r=0;
-    if(r!==parseInt(cpf[9]))return false;
-    s=0;
-    for(let i=0;i<10;i++)s+=parseInt(cpf[i])*(11-i);
-    r=(s*10)%11;
-    if(r===10)r=0;
-    return r===parseInt(cpf[10]);
+    let s=0;for(let i=0;i<9;i++)s+=cpf[i]*1*(10-i);
+    let r=(s*10)%11;if(r==10)r=0;if(r!=cpf[9])return false;
+    s=0;for(let i=0;i<10;i++)s+=cpf[i]*1*(11-i);
+    r=(s*10)%11;if(r==10)r=0;return r==cpf[10];
 };
 
-// ---------- RENDER ----------
-const renderGrid=(layout)=>{
-    const c=q(".bus-container");
-    const g=document.createElement("div");
-    g.className="grid";
-
-    (Array.isArray(layout)?layout.flat():[]).forEach(seat=>{
-        const e=createSeat(seat);
-
-        if(seat!==null && seat!=="white"){
-            const num = seat.toString().padStart(2,"0");
-
-            // Se estiver bloqueada → marca cinza e não deixa clicar
-            if(blockedSeats.includes(num)){
-                e.classList.add("blocked");
-            } else {
-                e.addEventListener("click",()=>selectSeat(e));
-            }
-        }
-        g.appendChild(e);
-    });
-
-    c.appendChild(g);
+const createSeat=v=>{
+    const e=document.createElement("div");
+    if(v===null) e.className="empty";
+    else if(v==="white") e.className="seat white";
+    else{ e.className="seat"; e.textContent=v.toString().padStart(2,"0"); }
+    return e;
 };
 
 const animateProgress=t=>{
     let w=parseFloat(progressBar.style.width)||0;
-    const step=()=>{
-        if(w<t){
-            w+=0.5;
-            progressBar.style.width=w+"%";
-            requestAnimationFrame(step);
-        }
-    };
+    const step=()=>{ if(w<t){ w+=.5; progressBar.style.width=w+"%"; requestAnimationFrame(step); } };
     step();
 };
 
-// ---------- MAIN ----------
+// ------------------- RENDER GRID -------------------
+const renderGrid=layout=>{
+    const container=q(".bus-container");
+    const g=document.createElement("div");
+    g.className="grid";
+
+    layout.flat().forEach(seat=>{
+        const e=createSeat(seat);
+        if(seat!==null && seat!=="white"){
+            const num=seat.toString().padStart(2,"0");
+            if(blockedSeats.includes(num)) e.classList.add("blocked");
+            else e.onclick=()=>selectSeat(e);
+        }
+        g.appendChild(e);
+    });
+
+    container.appendChild(g);
+};
+
+const selectSeat=e=>{
+    if(e.classList.contains("blocked")) return;
+    if(selectedSeat) selectedSeat.classList.remove("selected");
+    e.classList.add("selected");
+    selectedSeat=e;
+};
+
+// ------------------- LOAD -------------------
 const renderSeats=async()=>{
-    const p=new URLSearchParams(window.location.search);
+    const p=new URLSearchParams(location.search);
     const busId=p.get("bus")||"0052";
     const curso=p.get("CURSO")||p.get("curso")||"";
 
-    animateProgress(50);
+    animateProgress(40);
 
     const cfg=await fetchJSON(`./configs/${busId}.json`);
-    if(!cfg||!cfg.layout){alert("Erro ao carregar o layout do ônibus.");return}
+    if(!cfg){ alert("Erro ao carregar layout."); return; }
 
-    animateProgress(75);
-
-    let res={poltronas:[]};
+    animateProgress(70);
 
     if(curso){
-        // Busca dados do backend
-        res = await fetchJSON("https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/239ef024d32946f99a66585bed86d236/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ItjHZInk4ZgqUycsWShgWkI1PEphNs_bQhmpReiFwuA");
+        const res=await fetchJSON("https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/239ef024d32946f99a66585bed86d236/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ItjHZInk4ZgqUycsWShgWkI1PEphNs_bQhmpReiFwuA");
 
-        // Lista de poltronas reservadas
-        blockedSeats = (res.poltronas||[])
-            .filter(x=>x.CURSO===curso)
-            .map(x=>x.ID.padStart(2,"0"));
+        const rows=res?.poltronas||[];
 
-        // Lista de CPFs reservando qualquer poltrona
-        reservedByCPF = (res.poltronas||[]).map(x => x.CPF2);
+        blockedSeats=rows.filter(x=>x.CURSO===curso).map(x=>x.ID.padStart(2,"0"));
+        reservedByCPF=rows.map(x=>x.CPF2);
     }
 
     animateProgress(100);
-
     renderGrid(cfg.layout);
 
-    setTimeout(()=>{
-        progressContainer.style.opacity=0;
-        setTimeout(()=>progressContainer.remove(),300)
-    },300);
-
-    busWrapper.style.display="block";
+    setTimeout(()=>progressContainer.remove(),600);
+    q("#bus-wrapper").style.display="block";
 };
 
-// ---------- CONFIRMAR ----------
-q("#confirmarBtn").addEventListener("click",async()=>{
+// ------------------- CONFIRMAR -------------------
+q("#confirmarBtn").onclick=async()=>{
+    if(!selectedSeat) return alert("Selecione uma poltrona.");
 
-    if(!selectedSeat){
-        alert("Selecione uma poltrona");
-        return;
-    }
-
-    let cpf = prompt("CPF (somente números)");
+    let cpf=prompt("CPF (somente números)");
     if(!cpf) return;
 
-    cpf = cpf.replace(/\D/g,'').padStart(11,'0');
+    cpf=cpf.replace(/\D/g,'').padStart(11,'0');
+    if(!validarCPF(cpf)) return alert("CPF inválido.");
 
-    if(!validarCPF(cpf)){
-        alert("CPF inválido");
-        return;
-    }
+    if(reservedByCPF.includes(cpf))
+        return alert("Usuário possui uma poltrona reservada. Caso deseje trocar, solicite alteração.");
 
-    // 🔒 BLOQUEIO EXTRA — CPF já tem reserva?
-    if(reservedByCPF.includes(cpf)){
-        alert("Você já possui uma poltrona reservada. Caso deseje trocar, peça alteração na coordenação.");
-        return;
-    }
-
-    const p=new URLSearchParams(window.location.search);
-    const curso=p.get("CURSO")||p.get("curso")||"";
-    const poltrona=selectedSeat.textContent;
-
-    const url="https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/1b4f6536a25d47d5909b9ccac943a5e8/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=naqfy45S_5sWJoEHTCKIBUbvFpViVRGz4KOXMuyIffw";
+    const p=new URLSearchParams(location.search);
+    const body={
+        poltrona:selectedSeat.textContent,
+        CURSO:p.get("CURSO")||p.get("curso")||"",
+        cpf
+    };
 
     try{
-        const body = { poltrona, CURSO:curso, cpf:cpf };
-
-        const r = await fetch(url,{
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body:JSON.stringify(body)
-        });
+        const r=await fetch(
+            "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/1b4f6536a25d47d5909b9ccac943a5e8/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=naqfy45S_5sWJoEHTCKIBUbvFpViVRGz4KOXMuyIffw",
+            {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}
+        );
 
         if(r.ok){
             alert("Poltrona selecionada com sucesso!");
-            setTimeout(()=>location.reload(),3000);
-        } else {
-            alert("Erro ao enviar os dados.");
-        }
-
-    } catch(e){
+            setTimeout(()=>location.reload(),2500);
+        } else alert("Erro ao encaminhar os dados.");
+    }catch(err){
+        console.error(err);
         alert("Erro de comunicação.");
-        console.error(e);
     }
-});
+};
 
 renderSeats();
 </script>
