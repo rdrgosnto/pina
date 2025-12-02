@@ -269,7 +269,7 @@ function validarCPF(cpf) {
 
 document.getElementById("confirmarBtn").addEventListener("click", async () => {
     if (!selectedSeat) {
-        alert("Selecione uma poltrona antes de confirmar.");
+        alert("Selecione uma poltrona.");
         return;
     }
 
@@ -296,10 +296,10 @@ document.getElementById("confirmarBtn").addEventListener("click", async () => {
         });
 
         if (res.ok) {
-            alert("Poltrona confirmada!");
+            alert("Poltrona selecionada com sucesso!");
             setTimeout(() => location.reload(), 4000);
         } else {
-            alert("Erro ao enviar os dados.");
+            alert("Erro ao encaminhar os dados.");
         }
 
     } catch(e) {
