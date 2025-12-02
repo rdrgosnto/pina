@@ -123,15 +123,22 @@ const renderSeats=async()=>{
     q("#bus-wrapper").style.display="block";
 };
 
-// ------------------- CONFIRMAR -------------------
+// ------------------- CONFIRMAR (ATUALIZADO C/ LOOP DE CPF) -------------------
 q("#confirmarBtn").onclick=async()=>{
     if(!selectedSeat) return alert("Selecione uma poltrona.");
 
-    let cpf=prompt("CPF (somente números)");
-    if(!cpf) return;
+    let cpf=null;
 
-    cpf=cpf.replace(/\D/g,'').padStart(11,'0');
-    if(!validarCPF(cpf)) return alert("CPF inválido.");
+    // 🔁 LOOP PARA PERMITIR DIGITAR CPF ATÉ FICAR VÁLIDO
+    while(true){
+        cpf = prompt("CPF (somente números)");
+        if(cpf === null) return; // usuário cancelou
+
+        cpf = cpf.replace(/\D/g,'').padStart(11,'0');
+
+        if(validarCPF(cpf)) break; // válido → pode sair
+        alert("CPF inválido. Tente novamente."); // inválido → repete
+    }
 
     if(reservedByCPF.includes(cpf))
         return alert("Usuário possui uma poltrona reservada. Caso deseje trocar, solicite alteração.");
