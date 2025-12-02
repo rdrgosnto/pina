@@ -36,7 +36,7 @@
 <div id="poltronas" class="grid"></div>
 
 <script>
-    // 🔗 SUA URL DO FLUXO GET
+    // 🔗 URL do seu fluxo GET do Power Automate
     const urlGet = "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/fc2a8382f65e4d6babd3b474ff922f31/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ECbWzq2eELLbMlCdX8gJq1SygtSQ7s2IqKzdKlMBZo4";
 
     // Criar 40 poltronas na tela
@@ -50,7 +50,7 @@
         }
     }
 
-    // Buscar dados do Power Automate
+    // Buscar dados do Power Automate e marcar poltronas ocupadas
     async function carregarPoltronas() {
         try {
             let resposta = await fetch(urlGet);
@@ -58,12 +58,11 @@
 
             console.log("Dados recebidos do Power Automate:", dados);
 
-            // Marca cada poltrona ocupada
             dados.forEach(item => {
-                let num = parseInt(item["#"]); // coluna #
-                let btn = document.getElementById("p" + num);
-                if (btn) {
-                    btn.classList.add("ocupada");
+                let num = parseInt(item["ID"]); // agora usando a coluna ID
+                if (!isNaN(num)) {
+                    let btn = document.getElementById("p" + num);
+                    if (btn) btn.classList.add("ocupada");
                 }
             });
 
