@@ -130,9 +130,10 @@ body {
 <script>
 let selectedSeat = null;
 
-async function loadJSON(url) {
+// Função para carregar JSON via fetch
+async function loadJSON(url, options = {}) {
     try {
-        const res = await fetch(url);
+        const res = await fetch(url, options);
         if (!res.ok) return null;
         return await res.json().catch(() => null);
     } catch {
@@ -140,6 +141,7 @@ async function loadJSON(url) {
     }
 }
 
+// Criação de cada poltrona
 function createSeat(value) {
     const el = document.createElement("div");
     if (value === null) el.className = "empty";
@@ -151,6 +153,7 @@ function createSeat(value) {
     return el;
 }
 
+// Seleção de poltrona
 function selectSeat(el) {
     if (el.classList.contains("selected")) {
         el.classList.remove("selected");
@@ -162,24 +165,21 @@ function selectSeat(el) {
     selectedSeat = el;
 }
 
+// Validação de CPF
 function validarCPF(cpf) {
     cpf = cpf.replace(/\D/g,'').padStart(11,'0');
     if(cpf.length!==11 || /^(\d)\1+$/.test(cpf)) return false;
-
     let soma=0;
     for(let i=0;i<9;i++) soma += parseInt(cpf[i])*(10-i);
-    let resto = (soma*10)%11;
-    if(resto===10) resto=0;
+    let resto=(soma*10)%11; if(resto===10) resto=0;
     if(resto!==parseInt(cpf[9])) return false;
-
     soma=0;
     for(let i=0;i<10;i++) soma += parseInt(cpf[i])*(11-i);
-    resto=(soma*10)%11;
-    if(resto===10) resto=0;
-
+    resto=(soma*10)%11; if(resto===10) resto=0;
     return resto===parseInt(cpf[10]);
 }
 
+// Renderização do mapa de poltronas
 async function renderSeats() {
     const params = new URLSearchParams(window.location.search);
     const busId = params.get("bus") || "0052";
@@ -187,11 +187,11 @@ async function renderSeats() {
 
     const progressBar = document.getElementById("progress-bar");
     let progress = 0;
-
     const interval = setInterval(()=>{
         if(progress<95){progress+=0.2; progressBar.style.width=progress+"%";}
     },16);
 
+    // Carregar layout do ônibus
     const config = await loadJSON(`./configs/${busId}.json`);
     if(!config||!config.layout){
         clearInterval(interval);
@@ -200,9 +200,13 @@ async function renderSeats() {
     }
     progressBar.style.width="50%";
 
-    // GET poltronas ocupadas via Power Automate (filtrando pela turma)
+    // GET poltronas ocupadas via Power Automate (filtra pela turma)
     const paURL = "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/fc2a8382f65e4d6babd3b474ff922f31/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ECbWzq2eELLbMlCdX8gJq1SygtSQ7s2IqKzdKlMBZo4";
-    let blocked = await loadJSON(`${paURL}?turma=${turma}`);
+    let blocked = await loadJSON(paURL, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ turma })
+    });
     if(!Array.isArray(blocked)) blocked = [];
     const blockedNumbers = blocked.map(s => s.ID);
 
@@ -221,3 +225,58 @@ async function renderSeats() {
     layoutFlat.forEach(seat=>{
         const el = createSeat(seat);
         if(seat!==null && seat!=="white"){
+            const num = seat.toString().padStart(2,"0");
+            if(blockedNumbers.includes(num)) el.classList.add("blocked");
+            else el.addEventListener("click",()=>selectSeat(el));
+        }
+        grid.appendChild(el);
+        loadedSeats++;
+        progressBar.style.width=(80+(loadedSeats/totalSeats)*20)+"%";
+    });
+
+    container.appendChild(grid);
+    clearInterval(interval);
+    progressBar.style.width="100%";
+
+    setTimeout(()=>{
+        document.getElementById("progress-bar-container").style.opacity=0;
+        setTimeout(()=>{document.getElementById("progress-bar-container").remove();},300);
+    },300);
+
+    wrapper.style.display="block";
+}
+
+// Botão confirmar
+document.getElementById("confirmarBtn").addEventListener("click", async ()=>{
+    if(!selectedSeat){ alert("Selecione uma poltrona."); return; }
+
+    let cpf = prompt("Digite seu CPF (apenas números):");
+    if(!cpf) return;
+    cpf = cpf.replace(/\D/g,'').padStart(11,'0');
+    if(!validarCPF(cpf)){ alert("CPF inválido."); return; }
+
+    const turma = new URLSearchParams(window.location.search).get("turma") || "";
+    const poltrona = selectedSeat.textContent;
+
+    // POST para Power Automate
+    const urlPOST = "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/5496eb2ad8a74af9b5080744a0d24807/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=KoClUQbjbcx8G9By-JcoWIyEb17CWvksL_bPqXFi22Q";
+
+    try {
+        const res = await loadJSON(urlPOST, {
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({ poltrona, curso: turma, cpf })
+        });
+        if(res && res.success) alert("Poltrona confirmada!");
+        else alert("Erro: "+(res?.message || "Poltrona já ocupada."));
+        setTimeout(()=>location.reload(),4000);
+    } catch(e){
+        alert("Erro de comunicação.");
+        console.error(e);
+    }
+});
+
+renderSeats();
+</script>
+</body>
+</html>
