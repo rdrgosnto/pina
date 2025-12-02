@@ -125,16 +125,16 @@ const renderSeats=async()=>{
 
 // ------------------- CONFIRMAR -------------------
 q("#confirmarBtn").onclick=async()=>{
-    if(!selectedSeat) return alert("Selecione uma poltrona");
+    if(!selectedSeat) return alert("Selecione uma poltrona.");
 
     let cpf=prompt("CPF (somente números)");
     if(!cpf) return;
 
     cpf=cpf.replace(/\D/g,'').padStart(11,'0');
-    if(!validarCPF(cpf)) return alert("CPF inválido");
+    if(!validarCPF(cpf)) return alert("CPF inválido.");
 
     if(reservedByCPF.includes(cpf))
-        return alert("Você já possui uma poltrona reservada. Caso deseje trocar, peça alteração na coordenação.");
+        return alert("Usuário possui uma poltrona reservada. Caso deseje trocar, solicite alteração.");
 
     const p=new URLSearchParams(location.search);
     const body={
@@ -152,7 +152,7 @@ q("#confirmarBtn").onclick=async()=>{
         if(r.ok){
             alert("Poltrona selecionada com sucesso!");
             setTimeout(()=>location.reload(),2500);
-        } else alert("Erro ao enviar os dados.");
+        } else alert("Erro ao encaminhar os dados.");
     }catch(err){
         console.error(err);
         alert("Erro de comunicação.");
