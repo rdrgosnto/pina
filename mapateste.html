@@ -30,8 +30,6 @@ body {
     width: fit-content;
     margin: 20px auto;
     position: relative;
-
-    /* Centraliza o grid dentro do container */
     display: flex;
     justify-content: center;
 }
@@ -41,8 +39,6 @@ body {
     grid-template-columns: repeat(5, 54px);
     column-gap: 10px;
     row-gap: 14px;
-
-    /* Centraliza o conteúdo do grid */
     justify-content: center;
     justify-items: center;
 }
@@ -218,7 +214,13 @@ const selectSeat = e => {
 // ------------------- LOAD -------------------
 const renderSeats=async()=>{
     const p=new URLSearchParams(location.search);
-    const busId=p.get("bus")||"0052";
+
+    // Pegar busId diretamente da URL (rota)
+    let busId = p.get("bus");
+    if(!busId){
+        busId = location.pathname.split("/").pop();
+    }
+
     const curso=p.get("CURSO")||p.get("curso")||"";
 
     animateProgress(40);
