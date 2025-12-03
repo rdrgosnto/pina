@@ -55,10 +55,8 @@ body{font-family:Arial,sans-serif;margin:0;padding:0;display:flex;flex-direction
 const q=(s,d=document)=>d.querySelector(s);
 let sel=null,rb=[],bl=[];
 
-const fJSON=async u=>{
-    try{const r=await fetch(u);return r.ok?await r.json().catch(()=>null):null}
-    catch{return null}
-};
+// MOCK: armazenar reservas localmente
+let reservas = JSON.parse(localStorage.getItem("reservas")) || [];
 
 const vCPF=cpf=>{
     cpf=cpf.replace(/\D/g,'').padStart(11,'0');
@@ -92,7 +90,7 @@ const renderGrid=l=>{
         const e=cSeat(v);
         if(v!==null&&v!=="white"){
             const n=v.toString().padStart(2,"0");
-            if(bl.includes(n))e.classList.add("blocked");
+            if(bl.includes(n) || reservas.some(r=>r.poltrona===n)) e.classList.add("blocked");
             else e.onclick=()=>select(e);
         }
         g.appendChild(e);
@@ -108,21 +106,17 @@ const select=e=>{
 
 const renderSeats=async()=>{
     let h=location.hash.slice(1),[bus,curso]=h.split("/");
-    bus=bus||"0052"; curso=curso||"";
+    bus=bus||"0052"; curso=curso||"CURSO";
 
     q("#cursoText").textContent=curso.toUpperCase();
 
     animProg(40);
-    const cfg=await fJSON(`./configs/${bus}.json`);
-    if(!cfg){alert("Erro ao carregar layout.");return}
+    // MOCK: layout fixo
+    const cfg = { layout: [[1,2,3,4,5],[6,7,8,9,10],[11,12,13,14,15]] };
     animProg(70);
 
-    if(curso){
-        const res=await fJSON("https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/239ef024d32946f99a66585bed86d236/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ItjHZInk4ZgqUycsWShgWkI1PEphNs_bQhmpReiFwuA");
-        const rows=res?.poltronas||[];
-        bl=rows.filter(x=>x.CURSO===curso).map(x=>x.ID.padStart(2,"0"));
-        rb=rows.map(x=>x.CPF2);
-    }
+    bl=[]; // sem bloqueados adicionais
+    rb = reservas.filter(r=>r.CURSO===curso).map(r=>r.cpf);
 
     animProg(100);
     renderGrid(cfg.layout);
@@ -142,19 +136,18 @@ q("#confirmarBtn").onclick=async()=>{
         alert("CPF inválido.");
     }
 
+    const poltrona = sel.textContent;
+    const h=location.hash.slice(1),curso=h.split("/")[1]||"CURSO";
+
     if(rb.includes(cpf))return alert("Usuário já possui poltrona reservada.");
+    if(reservas.some(r=>r.poltrona===poltrona)) return alert("Poltrona já reservada.");
 
-    const h=location.hash.slice(1),curso=h.split("/")[1]||"";
-    const body={poltrona:sel.textContent,CURSO:curso,cpf};
+    // salvar localmente
+    reservas.push({poltrona, CURSO:curso, cpf});
+    localStorage.setItem("reservas", JSON.stringify(reservas));
 
-    try{
-        const r=await fetch(
-            "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerautomate/automations/direct/workflows/1b4f6536a25d47d5909b9ccac943a5e8/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=naqfy45S_5sWJoEHTCKIBUbvFpViVRGz4KOXMuyIffw",
-            {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}
-        );
-        if(r.ok){alert("Poltrona selecionada com sucesso!");setTimeout(()=>location.reload(),2500)}
-        else alert("Erro ao enviar dados");
-    }catch{alert("Erro de comunicação.")}
+    alert("Poltrona selecionada com sucesso!");
+    setTimeout(()=>location.reload(),500);
 };
 
 renderSeats();
