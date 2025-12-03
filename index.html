@@ -23,7 +23,7 @@ body{
     border-radius:16px;
     width:fit-content;
     margin:20px auto;
-    position:relative; /* ESSENCIAL — permite colar a caixa na borda */
+    position:relative; /* importante para posicionamento absoluto do filho */
     display:flex;
     justify-content:center
 }
@@ -88,27 +88,32 @@ body{
     cursor:pointer;position:absolute;bottom:-64px;right:20px
 }
 
-/*** CAIXA DA TURMA — ALINHADA AO CONTAINER DE POLTRONAS ***/
+/* CAIXA DA TURMA — COLADA NA BORDA EXTERNA DIREITA DO CONTAINER */
 #cursoBox {
     position: absolute;       
-    top: 60px;           /* ↓ ajuste livre para subir/descer */
-    right: -60px;        /* ↓ cola na borda direita do container */
-    width: 40px;         /* ↓ deixar mais estreita é só mudar */
-    height: 122px;
+    top: 60px;                    /* ajuste para subir/descer */
+    left: calc(100% + 3px);       /* 100% (largura do container) + 3px (largura da borda) */
+    width: 40px;                  /* largura da caixa (ajuste se quiser) */
+    height: 122px;                /* altura (2 poltronas + gaps) */
     background: #4CAF50;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #fff;
     font-weight: bold;
-    z-index: 999;
+    z-index: 9999;
     overflow: hidden;
+    box-shadow: none;             /* remove sombras/bordas escuras indesejadas */
+    border: 0;                    /* garante que não haja borda */
+    pointer-events: none;         /* não bloqueia cliques no mapa */
 }
 
+/* Texto rotacionado 90° à esquerda */
 #cursoText {
     transform: rotate(-90deg);
     font-size: 18px;
     white-space: nowrap;
+    line-height: 1;
 }
 </style>
 </head>
@@ -117,7 +122,7 @@ body{
 <div id="bus-wrapper">
     <div class="bus-container">
 
-        <!-- CAIXA VERDE AGORA COLADA NA BORDA DO MAPA -->
+        <!-- CAIXA VERDE AGORA COLADA NA BORDA EXTERNA DO MAPA -->
         <div id="cursoBox">
             <div id="cursoText"></div>
         </div>
@@ -210,7 +215,8 @@ const renderSeats=async()=>{
     bus=bus||"0052";
     curso=curso||"";
 
-    q("#cursoText").textContent = curso.toUpperCase();
+    // coloca apenas o código da turma atual dentro da caixa
+    q("#cursoText").textContent = (curso||"").toUpperCase();
 
     animProg(40);
     const cfg=await fJSON(`./configs/${bus}.json`);
