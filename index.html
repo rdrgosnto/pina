@@ -23,7 +23,7 @@ body{
     border-radius:16px;
     width:fit-content;
     margin:20px auto;
-    position:relative; /* importante para posicionamento absoluto do filho */
+    position:relative; 
     display:flex;
     justify-content:center
 }
@@ -88,13 +88,13 @@ body{
     cursor:pointer;position:absolute;bottom:-64px;right:20px
 }
 
-/* CAIXA DA TURMA — COLADA NA BORDA EXTERNA DIREITA DO CONTAINER */
+/* CAIXA DA TURMA — SOBRE A BORDA DIREITA DO CONTAINER */
 #cursoBox {
-    position: absolute;       
-    top: 60px;                    /* ajuste para subir/descer */
-    left: calc(100% + 3px);       /* 100% (largura do container) + 3px (largura da borda) */
-    width: 40px;                  /* largura da caixa (ajuste se quiser) */
-    height: 122px;                /* altura (2 poltronas + gaps) */
+    position: absolute;
+    top: 60px;
+    right: -3px;               /* encosta EXATAMENTE sobre a borda */
+    width: 40px;
+    height: 122px;
     background: #4CAF50;
     display: flex;
     align-items: center;
@@ -103,12 +103,12 @@ body{
     font-weight: bold;
     z-index: 9999;
     overflow: hidden;
-    box-shadow: none;             /* remove sombras/bordas escuras indesejadas */
-    border: 0;                    /* garante que não haja borda */
-    pointer-events: none;         /* não bloqueia cliques no mapa */
+    box-shadow: none;
+    border: 0;
+    pointer-events: none;
 }
 
-/* Texto rotacionado 90° à esquerda */
+/* Texto rotacionado 90° */
 #cursoText {
     transform: rotate(-90deg);
     font-size: 18px;
@@ -122,7 +122,6 @@ body{
 <div id="bus-wrapper">
     <div class="bus-container">
 
-        <!-- CAIXA VERDE AGORA COLADA NA BORDA EXTERNA DO MAPA -->
         <div id="cursoBox">
             <div id="cursoText"></div>
         </div>
@@ -215,7 +214,6 @@ const renderSeats=async()=>{
     bus=bus||"0052";
     curso=curso||"";
 
-    // coloca apenas o código da turma atual dentro da caixa
     q("#cursoText").textContent = (curso||"").toUpperCase();
 
     animProg(40);
