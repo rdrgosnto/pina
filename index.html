@@ -24,20 +24,22 @@ body{font-family:Arial,sans-serif;margin:0;padding:0;display:flex;flex-direction
 /* Retângulo flutuante no canto direito */
 .floating-rect {
     position: fixed;
-    top: 90px;        /* um pouco abaixo do topo */
-    right: 0;         /* colado à direita */
-    width: 122px;      /* largura = 1 poltrona */
-    height: 54px;    /* altura = 2 poltronas + gap */
-    background: #4CAF50; /* mesma cor das poltronas */
-    border: none;     /* bordas quadradas */
+    top: 120px;          
+    right: 0;            
+    width: 54px;         
+    height: 108px;       
+    background: #4CAF50; 
+    border: none;        
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
     color: #fff;
-    transform: rotate(-90deg); /* rotaciona o texto 90° à esquerda */
+
+    transform: rotate(-90deg);
     transform-origin: center;
-    pointer-events: none; /* não bloqueia clique */
+
+    pointer-events: none;
     z-index: 9999;
 }
 </style>
@@ -90,14 +92,12 @@ q("#confirmarBtn").onclick=async()=>{
 };
 renderSeats();
 
-// ==========================
-// Retângulo flutuante no canto direito
-// ==========================
+// Retângulo flutuante
 const floatingRect = document.querySelector("#floatingRect");
 const getCursoFromURL = () => {
     const h = location.hash.slice(1);
     const curso = h.split("/")[1] || "";
-    return curso.toUpperCase(); // ex: "AAL", "ALI", "QUI"
+    return curso.toUpperCase();
 };
 floatingRect.textContent = getCursoFromURL();
 </script>
