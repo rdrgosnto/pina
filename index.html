@@ -88,11 +88,11 @@ body{
     cursor:pointer;position:absolute;bottom:-64px;right:20px
 }
 
-/*** NOVA CAIXA DA TURMA — SEM BORDA ESCURA, ROTACIONADA E DINÂMICA ***/
+/*** CAIXA DA TURMA — agora alinhada ao container ***/
 #cursoBox {
-    position: fixed;
-    top: 70px;     /* ajuste aqui se quiser subir ou descer */
-    right: 0;       /* cola à direita */
+    position: absolute;       /* mudou de fixed para absolute */
+    top: 70px;                /* mantém altura */
+    right: -60px;             /* encosta na direita do mapa */
     width: 40px;
     height: 122px;
     background: #4CAF50;
@@ -106,7 +106,7 @@ body{
 }
 
 #cursoText {
-    transform: rotate(-90deg);   /* rotaciona para a esquerda */
+    transform: rotate(-90deg);
     font-size: 18px;
     white-space: nowrap;
 }
@@ -116,16 +116,17 @@ body{
 
 <div id="bus-wrapper">
     <div class="bus-container">
+
+        <!-- CAIXA VERDE AGORA COLADA NO MAPA -->
+        <div id="cursoBox">
+            <div id="cursoText"></div>
+        </div>
+
         <button id="confirmarBtn">CONFIRMAR</button>
     </div>
 </div>
 
 <div id="progress-bar-container"><div id="progress-bar"></div></div>
-
-<!-- CAIXA VERDE DINÂMICA -->
-<div id="cursoBox">
-    <div id="cursoText"></div>
-</div>
 
 <script>
 const q=(s,d=document)=>d.querySelector(s);
@@ -209,7 +210,6 @@ const renderSeats=async()=>{
     bus=bus||"0052";
     curso=curso||"";
 
-    // Atualiza caixa da turma
     q("#cursoText").textContent = curso.toUpperCase();
 
     animProg(40);
