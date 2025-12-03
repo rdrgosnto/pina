@@ -132,13 +132,13 @@ body {
     right: 20px;
 }
 
-/* CAIXA VERDE FLUTUANTE AJUSTADA */
+/* CAIXA VERDE FLUTUANTE — FIXA NA DIREITA SEM GERAR ESPAÇO */
 .floating-rect {
     position: fixed;
-    top: 150px;           /* levemente mais abaixo */
-    right: -24px;         /* encostada na lateral */
-    width: 122px;          /* largura menor conforme pedido */
-    height: 54px;  
+    top: 150px;
+    right: 0;             /* Agora 100% colada na direita */
+    width: 122px;
+    height: 54px;
     background: #4CAF50;
     border-radius: 0;
     display: flex;
@@ -147,8 +147,9 @@ body {
     font-weight: bold;
     color: #fff;
 
-    transform: rotate(-90deg) translateX(24px);
-    transform-origin: center;
+    /* Nova rotação sem alterar cálculo de largura/altura */
+    transform: translateY(50%) rotate(-90deg);
+    transform-origin: right center;
 
     pointer-events: none;
     z-index: 9999;
@@ -311,7 +312,7 @@ q("#confirmarBtn").onclick = async () => {
 
 renderSeats();
 
-// Atualiza retângulo flutuante com o CURSO
+// Atualiza texto do retângulo flutuante
 const floatingRect = document.querySelector("#floatingRect");
 const getCursoFromURL = () => {
     const h = location.hash.slice(1);
