@@ -4,128 +4,47 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Planner | Mapa</title>
+
 <style>
-body{
-    font-family:Arial,sans-serif;margin:0;padding:0;
-    display:flex;flex-direction:column;min-height:100vh;
-    justify-content:center;background:#fff
-}
+body{font-family:Arial,sans-serif;margin:0;padding:0;display:flex;flex-direction:column;min-height:100vh;justify-content:center;background:#fff}
+#bus-wrapper{transform:scale(.9);transform-origin:top center;display:none}
+.bus-container{padding:20px;border:3px solid #b0b0b0;border-radius:16px;width:fit-content;margin:20px auto;position:relative;display:flex;justify-content:center}
+.grid{display:grid;grid-template-columns:repeat(5,54px);column-gap:10px;row-gap:14px;justify-content:center;justify-items:center}
 
-#bus-wrapper{
-    transform:scale(.9);
-    transform-origin:top center;
-    display:none
-}
-
-.bus-container{
-    padding:20px;
-    border:3px solid #b0b0b0;
-    border-radius:16px;
-    width:fit-content;
-    margin:20px auto;
-    position:relative;
-    display:flex;
-    justify-content:center
-}
-
-.grid{
-    display:grid;
-    grid-template-columns:repeat(5,54px);
-    column-gap:10px;
-    row-gap:14px;
-    justify-content:center;
-    justify-items:center
-}
-
-.seat,.empty{
-    width:54px;height:54px;
-    display:flex;align-items:center;justify-content:center;
-    border-radius:12px;
-    position:relative
-}
-
-.seat{
-    background:#4CAF50;border:3px solid #4CAF50;
-    color:#fff;font-weight:bold;cursor:pointer
-}
-
-.seat::after{
-    content:"";position:absolute;bottom:-8px;left:50%;
-    transform:translateX(-50%);width:32px;height:14px;
-    border-radius:8px;background:#fff;border:3px solid #8c96b2
-}
-
-.seat.white{
-    background:#fff;border:3px solid #ccc;color:transparent
-}
-
+.seat,.empty{width:54px;height:54px;display:flex;align-items:center;justify-content:center;border-radius:12px;position:relative}
+.seat{background:#4CAF50;border:3px solid #4CAF50;color:#fff;font-weight:bold;cursor:pointer}
+.seat::after{content:"";position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);width:32px;height:14px;border-radius:8px;background:#fff;border:3px solid #8c96b2}
+.seat.white{background:#fff;border-color:#ccc;color:transparent}
 .seat.white::after{border-color:#ccc}
-
-.seat.blocked{
-    background:#6b6b6b;border-color:#6b6b6b;
-    color:#fff!important;cursor:not-allowed
-}
-
-.seat.selected{
-    background:#e74c3c;border-color:#e74c3c
-}
-
+.seat.blocked{background:#6b6b6b;border-color:#6b6b6b;color:#fff!important;cursor:not-allowed}
+.seat.selected{background:#e74c3c;border-color:#e74c3c}
 .empty{background:transparent}
 
-#progress-bar-container{
-    position:fixed;bottom:0;left:0;width:100%;
-    height:8px;background:rgba(0,0,0,.1);z-index:9999
-}
-
-#progress-bar{
-    width:0;height:100%;background:#4CAF50;
-    transition:width .1s linear
-}
+#progress-bar-container{position:fixed;bottom:0;left:0;width:100%;height:8px;background:rgba(0,0,0,.1);z-index:9999}
+#progress-bar{width:0;height:100%;background:#4CAF50;transition:width .1s linear}
 
 #confirmarBtn{
-    width:112px;height:54px;background:#4CAF50;color:#fff;
-    border:none;font-size:16px;font-weight:bold;border-radius:12px;
-    cursor:pointer;position:absolute;bottom:-64px;right:20px
+    width:112px;height:54px;background:#4CAF50;color:#fff;border:none;
+    font-size:16px;font-weight:bold;border-radius:12px;cursor:pointer;
+    position:absolute;bottom:-64px;right:20px
 }
 
-/* CAIXA DA TURMA — COLADA E PARA FORA DA BORDA */
-#cursoBox {
-    position: absolute;
-    top: 60px;
-    left: 100%;                    /* encosta na borda direita */
-    transform: translateX(0px);    /* desloca para FORA do container */
-    width: 40px;
-    height: 122px;
-    background: #4CAF50;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-weight: bold;
-    z-index: 9999;
-    overflow: hidden;
-    box-shadow: none;
-    border: 0;
-    pointer-events: none;
+/* CAIXA DO CURSO — COLADA PARA FORA DA BORDA */
+#cursoBox{
+    position:absolute;top:60px;left:100%;transform:translateX(0);
+    width:40px;height:122px;background:#4CAF50;color:#fff;font-weight:bold;
+    display:flex;align-items:center;justify-content:center;
+    z-index:9999;overflow:hidden;border:0;pointer-events:none
 }
-
-#cursoText {
-    transform: rotate(-90deg);
-    font-size: 18px;
-    white-space: nowrap;
-    line-height: 1;
-}
+#cursoText{transform:rotate(-90deg);font-size:18px;white-space:nowrap;line-height:1}
 </style>
 </head>
+
 <body>
 
 <div id="bus-wrapper">
     <div class="bus-container">
-
-        <div id="cursoBox">
-            <div id="cursoText"></div>
-        </div>
-
+        <div id="cursoBox"><div id="cursoText"></div></div>
         <button id="confirmarBtn">CONFIRMAR</button>
     </div>
 </div>
@@ -137,24 +56,19 @@ const q=(s,d=document)=>d.querySelector(s);
 let sel=null,rb=[],bl=[];
 
 const fJSON=async u=>{
-    try{
-        const r=await fetch(u);
-        return r.ok?await r.json().catch(()=>null):null
-    }catch{return null}
+    try{const r=await fetch(u);return r.ok?await r.json().catch(()=>null):null}
+    catch{return null}
 };
 
 const vCPF=cpf=>{
     cpf=cpf.replace(/\D/g,'').padStart(11,'0');
     if(cpf.length!==11||/^(\d)\1+$/.test(cpf))return false;
     let s=0;
-    for(let i=0;i<9;i++)s+=cpf[i]*1*(10-i);
-    let r=(s*10)%11;
-    if(r==10)r=0;
-    if(r!=cpf[9])return false;
+    for(let i=0;i<9;i++)s+=cpf[i]*(10-i);
+    let r=(s*10)%11; if(r==10)r=0; if(r!=cpf[9])return false;
     s=0;
-    for(let i=0;i<10;i++)s+=cpf[i]*1*(11-i);
-    r=(s*10)%11;
-    if(r==10)r=0;
+    for(let i=0;i<10;i++)s+=cpf[i]*(11-i);
+    r=(s*10)%11; if(r==10)r=0;
     return r==cpf[10];
 };
 
@@ -162,28 +76,18 @@ const cSeat=v=>{
     const e=document.createElement("div");
     if(v===null)e.className="empty";
     else if(v==="white")e.className="seat white";
-    else{
-        e.className="seat";
-        e.textContent=v.toString().padStart(2,"0");
-    }
+    else{e.className="seat";e.textContent=v.toString().padStart(2,"0")}
     return e;
 };
 
 const animProg=t=>{
     let w=parseFloat(q("#progress-bar").style.width)||0;
-    const step=()=>{
-        if(w<t){
-            w+=.5;
-            q("#progress-bar").style.width=w+"%";
-            requestAnimationFrame(step);
-        }
-    };
+    const step=()=>{if(w<t){w+=.5;q("#progress-bar").style.width=w+"%";requestAnimationFrame(step)}};
     step();
 };
 
 const renderGrid=l=>{
-    const g=document.createElement("div");
-    g.className="grid";
+    const g=document.createElement("div"); g.className="grid";
     l.flat().forEach(v=>{
         const e=cSeat(v);
         if(v!==null&&v!=="white"){
@@ -198,23 +102,15 @@ const renderGrid=l=>{
 
 const select=e=>{
     if(e.classList.contains("blocked"))return;
-    if(e.classList.contains("selected")){
-        e.classList.remove("selected");
-        sel=null;
-    }else{
-        if(sel)sel.classList.remove("selected");
-        e.classList.add("selected");
-        sel=e;
-    }
+    if(e.classList.contains("selected")){e.classList.remove("selected");sel=null}
+    else{if(sel)sel.classList.remove("selected");e.classList.add("selected");sel=e}
 };
 
 const renderSeats=async()=>{
-    let h=location.hash.slice(1),
-        [bus,curso]=h.split("/");
-    bus=bus||"0052";
-    curso=curso||"";
+    let h=location.hash.slice(1),[bus,curso]=h.split("/");
+    bus=bus||"0052"; curso=curso||"";
 
-    q("#cursoText").textContent = (curso||"").toUpperCase();
+    q("#cursoText").textContent=curso.toUpperCase();
 
     animProg(40);
     const cfg=await fJSON(`./configs/${bus}.json`);
@@ -246,12 +142,9 @@ q("#confirmarBtn").onclick=async()=>{
         alert("CPF inválido.");
     }
 
-    if(rb.includes(cpf))
-        return alert("Usuário já possui poltrona reservada.");
+    if(rb.includes(cpf))return alert("Usuário já possui poltrona reservada.");
 
-    const h=location.hash.slice(1),
-          curso=h.split("/")[1]||"";
-
+    const h=location.hash.slice(1),curso=h.split("/")[1]||"";
     const body={poltrona:sel.textContent,CURSO:curso,cpf};
 
     try{
@@ -259,17 +152,13 @@ q("#confirmarBtn").onclick=async()=>{
             "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerautomate/automations/direct/workflows/1b4f6536a25d47d5909b9ccac943a5e8/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=naqfy45S_5sWJoEHTCKIBUbvFpViVRGz4KOXMuyIffw",
             {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}
         );
-        if(r.ok){
-            alert("Poltrona selecionada com sucesso!");
-            setTimeout(()=>location.reload(),2500);
-        } else alert("Erro ao enviar dados");
-    }catch(e){
-        console.error(e);
-        alert("Erro de comunicação.");
-    }
+        if(r.ok){alert("Poltrona selecionada com sucesso!");setTimeout(()=>location.reload(),2500)}
+        else alert("Erro ao enviar dados");
+    }catch{alert("Erro de comunicação.")}
 };
 
 renderSeats();
 </script>
+
 </body>
 </html>
