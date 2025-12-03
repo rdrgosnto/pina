@@ -132,11 +132,11 @@ body {
     right: 20px;
 }
 
-/* RETÂNGULO FLUTUANTE FIXADO À DIREITA */
+/* RETÂNGULO FLUTUANTE FIXADO À DIREITA (CORRIGIDO) */
 .floating-rect {
     position: fixed;
-    top: 140px;
-    right: 0;              /* FIXADO À DIREITA */
+    top: 125px;               /* Subido um pouco */
+    right: -27px;             /* Corrige o espaço causado pela rotação */
     width: 108px;
     height: 54px;
     background: #4CAF50;
@@ -147,7 +147,7 @@ body {
     font-weight: bold;
     color: #fff;
 
-    transform: rotate(-90deg);
+    transform: rotate(-90deg) translateX(27px);
     transform-origin: center;
 
     pointer-events: none;
@@ -311,7 +311,6 @@ q("#confirmarBtn").onclick = async () => {
 };
 
 renderSeats();
-
 
 // Atualiza retângulo flutuante com o CURSO
 const floatingRect = document.querySelector("#floatingRect");
