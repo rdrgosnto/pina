@@ -132,13 +132,13 @@ body {
     right: 20px;
 }
 
-/* RETÂNGULO FLUTUANTE FIXADO À DIREITA (CORRIGIDO) */
+/* CAIXA VERDE FLUTUANTE AJUSTADA */
 .floating-rect {
     position: fixed;
-    top: 130px;               /* Subido um pouco */
-    right: -27px;             /* Corrige o espaço causado pela rotação */
-    width: 96px;
-    height: 54px;
+    top: 150px;           /* levemente mais abaixo */
+    right: -24px;         /* encostada na lateral */
+    width: 84px;          /* largura menor conforme pedido */
+    height: 54px;  
     background: #4CAF50;
     border-radius: 0;
     display: flex;
@@ -147,13 +147,12 @@ body {
     font-weight: bold;
     color: #fff;
 
-    transform: rotate(-90deg) translateX(27px);
+    transform: rotate(-90deg) translateX(24px);
     transform-origin: center;
 
     pointer-events: none;
     z-index: 9999;
 }
-
 </style>
 </head>
 <body>
