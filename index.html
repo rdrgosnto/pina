@@ -149,25 +149,12 @@ q("#confirmarBtn").onclick=async()=>{
 
     try{
         const r=await fetch(
-            "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/1b4f6536a25d47d5909b9ccac943a5e8/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=naqfy45S_5sWJoEHTCKIBUbvFpViVRGz4KOXMuyIffw",
+            "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerautomate/automations/direct/workflows/1b4f6536a25d47d5909b9ccac943a5e8/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=naqfy45S_5sWJoEHTCKIBUbvFpViVRGz4KOXMuyIffw",
             {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}
         );
-
-        console.log("Resposta do servidor:", r);
-        const data = await r.json().catch(()=>null);
-        console.log("Dados recebidos:", data);
-
-        if(r.ok){
-            alert("Poltrona selecionada com sucesso!");
-            setTimeout(()=>location.reload(),2500)
-        } else {
-            alert("Erro ao enviar dados. Status HTTP: " + r.status);
-        }
-
-    } catch(err){
-        console.error("Erro no fetch:", err);
-        alert("Erro de comunicação: " + err.message);
-    }
+        if(r.ok){alert("Poltrona selecionada com sucesso!");setTimeout(()=>location.reload(),2500)}
+        else alert("Erro ao enviar dados");
+    }catch{alert("Erro de comunicação.")}
 };
 
 renderSeats();
