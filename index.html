@@ -132,13 +132,13 @@ body {
     right: 20px;
 }
 
-/* CAIXA VERDE FLUTUANTE – Alinhada corretamente à direita */
+/* CAIXA VERDE QUE VOLTA A APARECER */
 .floating-rect {
     position: fixed;
     top: 150px;
-    right: -34px;           /* Ajuste perfeito para não cortar após rotação */
-    width: 122px;           /* Largura real antes da rotação */
-    height: 54px;           /* Altura real antes da rotação */
+    right: 10px;       /* APARECE NA TELA */
+    width: 122px;
+    height: 54px;
     background: #4CAF50;
     border-radius: 0;
     display: flex;
@@ -147,9 +147,8 @@ body {
     font-weight: bold;
     color: #fff;
 
-    /* Rotação fixa e estável */
     transform: rotate(-90deg);
-    transform-origin: top right;
+    transform-origin: center center; /* EVITA DESLOCAMENTO INVISÍVEL */
 
     pointer-events: none;
     z-index: 9999;
