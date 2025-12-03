@@ -132,15 +132,13 @@ body {
     right: 20px;
 }
 
-/* ╔══════════════════════════════╗ */
-/*   RETÂNGULO FLUTUANTE CORRIGIDO */
-/* ╚══════════════════════════════╝ */
+/* RETÂNGULO FLUTUANTE FIXADO À DIREITA */
 .floating-rect {
     position: fixed;
-    top: 140px;    /* levemente mais baixo */
-    right: 0;
-    width: 108px;  /* largura corrigida */
-    height: 54px;  /* altura corrigida */
+    top: 140px;
+    right: 0;              /* FIXADO À DIREITA */
+    width: 108px;
+    height: 54px;
     background: #4CAF50;
     border-radius: 0;
     display: flex;
@@ -149,7 +147,6 @@ body {
     font-weight: bold;
     color: #fff;
 
-    /* rotacionado 90° à esquerda */
     transform: rotate(-90deg);
     transform-origin: center;
 
@@ -316,7 +313,7 @@ q("#confirmarBtn").onclick = async () => {
 renderSeats();
 
 
-// Atualiza retângulo flutuante com o CURSO vindo da URL
+// Atualiza retângulo flutuante com o CURSO
 const floatingRect = document.querySelector("#floatingRect");
 const getCursoFromURL = () => {
     const h = location.hash.slice(1);
