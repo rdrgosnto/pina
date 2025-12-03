@@ -4,9 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Planner | Mapa</title>
-
 <style>
-body {font-family: Arial,sans-serif;margin:0;padding:0;display:flex;flex-direction:column;min-height:100vh;justify-content:center;background:#fff}
+body{font-family:Arial,sans-serif;margin:0;padding:0;display:flex;flex-direction:column;min-height:100vh;justify-content:center;background:#fff}
 #bus-wrapper{transform:scale(.9);transform-origin:top center;display:none}
 .bus-container{padding:20px;border:3px solid #b0b0b0;border-radius:16px;width:fit-content;margin:20px auto;position:relative;display:flex;justify-content:center}
 .grid{display:grid;grid-template-columns:repeat(5,54px);column-gap:10px;row-gap:14px;justify-content:center;justify-items:center}
@@ -22,7 +21,6 @@ body {font-family: Arial,sans-serif;margin:0;padding:0;display:flex;flex-directi
 #progress-bar{width:0;height:100%;background:#4CAF50;transition:width .1s linear}
 #confirmarBtn{width:112px;height:54px;background:#4CAF50;color:#fff;border:none;font-size:16px;font-weight:bold;border-radius:12px;cursor:pointer;position:absolute;bottom:-64px;right:20px}
 </style>
-
 </head>
 <body>
 
@@ -35,45 +33,25 @@ body {font-family: Arial,sans-serif;margin:0;padding:0;display:flex;flex-directi
 <div id="progress-bar-container"><div id="progress-bar"></div></div>
 
 <script>
-const q=(s,d=document)=>d.querySelector(s);
+const q = (s,d=document)=>d.querySelector(s);
+let selectedSeat=null, blockedSeats=[], reservedByCPF=[];
 const progressBar=q("#progress-bar"), progressContainer=q("#progress-bar-container");
-let selectedSeat=null, reservedByCPF=[], blockedSeats=[];
 
-// ------------------- UTIL -------------------
-const fetchJSON=async url=>{
-    try{const r=await fetch(url);return r.ok?await r.json().catch(()=>null):null;}
-    catch{return null;}
-};
+const fetchJSON = async url => { try { const r=await fetch(url); return r.ok?await r.json().catch(()=>null):null; } catch{return null;} }
+const validarCPF = cpf => { cpf=cpf.replace(/\D/g,'').padStart(11,'0'); if(cpf.length!==11||/^(\d)\1+$/.test(cpf)) return false; let s=0,r=0; for(let i=0;i<9;i++) s+=cpf[i]*(10-i); r=(s*10)%11; if(r==10) r=0; if(r!=cpf[9]) return false; s=0; for(let i=0;i<10;i++) s+=cpf[i]*(11-i); r=(s*10)%11; if(r==10) r=0; return r==cpf[10]; }
 
-const validarCPF=cpf=>{
-    cpf=cpf.replace(/\D/g,'').padStart(11,'0');
-    if(cpf.length!==11||/^(\d)\1+$/.test(cpf))return false;
-    let s=0;for(let i=0;i<9;i++)s+=cpf[i]*1*(10-i);
-    let r=(s*10)%11;if(r==10)r=0;if(r!=cpf[9])return false;
-    s=0;for(let i=0;i<10;i++)s+=cpf[i]*1*(11-i);
-    r=(s*10)%11;if(r==10)r=0;return r==cpf[10];
-};
-
-const createSeat=v=>{
-    const e=document.createElement("div");
-    if(v===null) e.className="empty";
-    else if(v==="white") e.className="seat white";
-    else{ e.className="seat"; e.textContent=v.toString().padStart(2,"0"); }
+const createSeat = v => { 
+    const e=document.createElement("div"); 
+    e.className = v===null?"empty":v==="white"?"seat white":"seat"; 
+    if(v!=="white" && v!==null) e.textContent = v.toString().padStart(2,"0"); 
     return e;
 };
 
-const animateProgress=t=>{
-    let w=parseFloat(progressBar.style.width)||0;
-    const step=()=>{ if(w<t){ w+=.5; progressBar.style.width=w+"%"; requestAnimationFrame(step); } };
-    step();
-};
+const animateProgress = t => { let w=parseFloat(progressBar.style.width)||0; const step=()=>{if(w<t){ w+=.5; progressBar.style.width=w+"%"; requestAnimationFrame(step);} }; step(); }
 
-// ------------------- RENDER GRID -------------------
-const renderGrid=layout=>{
-    const container=q(".bus-container");
+const renderGrid = layout => {
     const g=document.createElement("div");
     g.className="grid";
-
     layout.flat().forEach(seat=>{
         const e=createSeat(seat);
         if(seat!==null && seat!=="white"){
@@ -83,37 +61,22 @@ const renderGrid=layout=>{
         }
         g.appendChild(e);
     });
-
-    container.appendChild(g);
+    q(".bus-container").appendChild(g);
 };
 
-// ------------------- SELECT/DESSELECT SEAT -------------------
 const selectSeat = e => {
     if(e.classList.contains("blocked")) return;
+    if(selectedSeat) selectedSeat.classList.remove("selected");
+    e.classList.toggle("selected");
+    selectedSeat = e.classList.contains("selected")?e:null;
+}
 
-    if(e.classList.contains("selected")){
-        e.classList.remove("selected");
-        selectedSeat = null;
-    } else {
-        if(selectedSeat) selectedSeat.classList.remove("selected");
-        e.classList.add("selected");
-        selectedSeat = e;
-    }
-};
-
-// ------------------- LOAD -------------------
-const renderSeats=async()=>{
-    // Leitura do hash no formato #0046/AAL
-    let hash = location.hash.slice(1); // remove #
-    let [busId, curso] = hash.split("/"); 
-    busId = busId || "0052";
-    curso = curso || "";
-
+const renderSeats = async () => {
+    let [busId, curso] = location.hash.slice(1).split("/"); 
+    busId = busId||"0052"; curso = curso||"";
     animateProgress(40);
-
-    const cfg=await fetchJSON(`./configs/${busId}.json`);
+    const cfg = await fetchJSON(`./configs/${busId}.json`);
     if(!cfg){ alert("Erro ao carregar layout."); return; }
-
     animateProgress(70);
 
     if(curso){
@@ -125,51 +88,29 @@ const renderSeats=async()=>{
 
     animateProgress(100);
     renderGrid(cfg.layout);
-
     setTimeout(()=>progressContainer.remove(),600);
     q("#bus-wrapper").style.display="block";
-};
+}
 
-// ------------------- CONFIRMAR -------------------
-q("#confirmarBtn").onclick=async()=>{
+q("#confirmarBtn").onclick = async () => {
     if(!selectedSeat) return alert("Selecione uma poltrona.");
-
-    let cpf=null;
-
+    let cpf;
     while(true){
-        cpf = prompt("CPF (somente números)");
-        if(cpf === null) return;
-
-        cpf = cpf.replace(/\D/g,'').padStart(11,'0');
-
+        cpf=prompt("CPF (somente números)");
+        if(cpf===null) return;
+        cpf=cpf.replace(/\D/g,'').padStart(11,'0');
         if(validarCPF(cpf)) break;
         alert("CPF inválido. Tente novamente.");
     }
-
-    if(reservedByCPF.includes(cpf))
-        return alert("Usuário possui uma poltrona reservada. Caso deseje trocar, solicite alteração.");
-
-    const body={
-        poltrona:selectedSeat.textContent,
-        CURSO:curso,
-        cpf
-    };
+    if(reservedByCPF.includes(cpf)) return alert("Usuário possui uma poltrona reservada.");
 
     try{
-        const r=await fetch(
-            "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/1b4f6536a25d47d5909b9ccac943a5e8/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=naqfy45S_5sWJoEHTCKIBUbvFpViVRGz4KOXMuyIffw",
-            {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}
-        );
-
-        if(r.ok){
-            alert("Poltrona selecionada com sucesso!");
-            setTimeout(()=>location.reload(),2500);
-        } else alert("Erro ao encaminhar os dados.");
-    }catch(err){
-        console.error(err);
-        alert("Erro de comunicação.");
-    }
-};
+        const r=await fetch("https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/1b4f6536a25d47d5909b9ccac943a5e8/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=naqfy45S_5sWJoEHTCKIBUbvFpViVRGz4KOXMuyIffw", 
+        {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({poltrona:selectedSeat.textContent, CURSO:curso, cpf})});
+        if(r.ok){alert("Poltrona selecionada com sucesso!"); setTimeout(()=>location.reload(),2500);}
+        else alert("Erro ao encaminhar os dados.");
+    }catch(err){console.error(err); alert("Erro de comunicação.");}
+}
 
 renderSeats();
 </script>
