@@ -23,7 +23,7 @@ body{
     border-radius:16px;
     width:fit-content;
     margin:20px auto;
-    position:relative;
+    position:relative; /* ESSENCIAL — permite colar a caixa na borda */
     display:flex;
     justify-content:center
 }
@@ -88,12 +88,12 @@ body{
     cursor:pointer;position:absolute;bottom:-64px;right:20px
 }
 
-/*** CAIXA DA TURMA — agora alinhada ao container ***/
+/*** CAIXA DA TURMA — ALINHADA AO CONTAINER DE POLTRONAS ***/
 #cursoBox {
-    position: absolute;       /* mudou de fixed para absolute */
-    top: 70px;                /* mantém altura */
-    right: -60px;             /* encosta na direita do mapa */
-    width: 40px;
+    position: absolute;       
+    top: 60px;           /* ↓ ajuste livre para subir/descer */
+    right: -60px;        /* ↓ cola na borda direita do container */
+    width: 40px;         /* ↓ deixar mais estreita é só mudar */
     height: 122px;
     background: #4CAF50;
     display: flex;
@@ -101,7 +101,7 @@ body{
     justify-content: center;
     color: #fff;
     font-weight: bold;
-    z-index: 9999;
+    z-index: 999;
     overflow: hidden;
 }
 
@@ -117,7 +117,7 @@ body{
 <div id="bus-wrapper">
     <div class="bus-container">
 
-        <!-- CAIXA VERDE AGORA COLADA NO MAPA -->
+        <!-- CAIXA VERDE AGORA COLADA NA BORDA DO MAPA -->
         <div id="cursoBox">
             <div id="cursoText"></div>
         </div>
