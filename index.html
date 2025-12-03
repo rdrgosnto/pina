@@ -23,7 +23,7 @@ body{
     border-radius:16px;
     width:fit-content;
     margin:20px auto;
-    position:relative; 
+    position:relative;
     display:flex;
     justify-content:center
 }
@@ -88,11 +88,12 @@ body{
     cursor:pointer;position:absolute;bottom:-64px;right:20px
 }
 
-/* CAIXA DA TURMA — SOBRE A BORDA DIREITA DO CONTAINER */
+/* CAIXA DA TURMA — SOBRE A BORDA EXTERNA, SEM ESPAÇO E SEM ENTRAR NO MAPA */
 #cursoBox {
     position: absolute;
     top: 60px;
-    right: -3px;               /* encosta EXATAMENTE sobre a borda */
+    left: 100%;                    /* encosta na borda direita */
+    transform: translateX(-3px);   /* sobrepõe os 3px da borda */
     width: 40px;
     height: 122px;
     background: #4CAF50;
@@ -108,7 +109,6 @@ body{
     pointer-events: none;
 }
 
-/* Texto rotacionado 90° */
 #cursoText {
     transform: rotate(-90deg);
     font-size: 18px;
@@ -256,7 +256,7 @@ q("#confirmarBtn").onclick=async()=>{
 
     try{
         const r=await fetch(
-            "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/1b4f6536a25d47d5909b9ccac943a5e8/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=naqfy45S_5sWJoEHTCKIBUbvFpViVRGz4KOXMuyIffw",
+            "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerautomate/automations/direct/workflows/1b4f6536a25d47d5909b9ccac943a5e8/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=naqfy45S_5sWJoEHTCKIBUbvFpViVRGz4KOXMuyIffw",
             {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}
         );
         if(r.ok){
