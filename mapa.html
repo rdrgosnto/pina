@@ -54,11 +54,13 @@ body{font-family:Arial,sans-serif;margin:0;padding:0;display:flex;flex-direction
 const q=(s,d=document)=>d.querySelector(s);
 let sel=null,rb=[],bl=[];
 
+// Função para buscar JSON remoto
 const fJSON=async u=>{
     try{const r=await fetch(u);return r.ok?await r.json().catch(()=>null):null}
     catch{return null}
 };
 
+// Validação de CPF
 const vCPF=cpf=>{
     cpf=cpf.replace(/\D/g,'').padStart(11,'0');
     if(cpf.length!==11||/^(\d)\1+$/.test(cpf))return false;
@@ -71,6 +73,7 @@ const vCPF=cpf=>{
     return r==cpf[10];
 };
 
+// Cria elemento da poltrona
 const cSeat=v=>{
     const e=document.createElement("div");
     if(v===null)e.className="empty";
@@ -79,19 +82,20 @@ const cSeat=v=>{
     return e;
 };
 
+// Animação da barra de progresso
 const animProg=t=>{
     let w=parseFloat(q("#progress-bar").style.width)||0;
-    const step=()=>{if(w<t){w+=.5;q("#progress-bar").style.width=w+"%";requestAnimationFrame(step)}};
-    step();
+    const step=()=>{if(w<t){w+=.5;q("#progress-bar").style.width=w+"%";requestAnimationFrame(step)}}; step();
 };
 
+// Renderiza grid de poltronas
 const renderGrid=l=>{
     const g=document.createElement("div"); g.className="grid";
     l.flat().forEach(v=>{
         const e=cSeat(v);
         if(v!==null&&v!=="white"){
             const n=v.toString().padStart(2,"0");
-            if(bl.includes(n))e.classList.add("blocked");
+            if(bl.includes(n)) e.classList.add("blocked");
             else e.onclick=()=>select(e);
         }
         g.appendChild(e);
@@ -99,12 +103,14 @@ const renderGrid=l=>{
     q(".bus-container").appendChild(g);
 };
 
+// Seleção de poltrona
 const select=e=>{
-    if(e.classList.contains("blocked"))return;
-    if(e.classList.contains("selected")){e.classList.remove("selected");sel=null}
-    else{if(sel)sel.classList.remove("selected");e.classList.add("selected");sel=e}
+    if(e.classList.contains("blocked")) return;
+    if(e.classList.contains("selected")){e.classList.remove("selected"); sel=null}
+    else{if(sel)sel.classList.remove("selected"); e.classList.add("selected"); sel=e}
 };
 
+// Renderiza poltronas e busca poltronas já reservadas (GET)
 const renderSeats=async()=>{
     let h=location.hash.slice(1),[bus,curso]=h.split("/");
     bus=bus||"0052"; curso=curso||"";
@@ -117,10 +123,19 @@ const renderSeats=async()=>{
     animProg(70);
 
     if(curso){
-        const res=await fJSON("https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/478aac5453024f5cb3d3b26495d9b7e0/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H6EQYc3xSSZazBjzf0vB_9u5QtwLNj_hnuoBM9CWgz0");
+        // URL GET para pegar poltronas já selecionadas
+        const res=await fJSON("https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/239ef024d32946f99a66585bed86d236/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ItjHZInk4ZgqUycsWShgWkI1PEphNs_bQhmpReiFwuA");
         const rows=res?.poltronas||[];
-        bl=rows.filter(x=>x.CURSO===curso).map(x=>x.ID.padStart(2,"0"));
-        rb=rows.map(x=>x.CPF2);
+
+        // Poltronas bloqueadas: só as que têm CPF2 preenchido
+        bl = rows
+            .filter(x=>x.CURSO===curso && x.CPF2?.trim())
+            .map(x=>x.ID.padStart(2,"0"));
+
+        // CPFs já cadastrados
+        rb = rows
+            .filter(x=>x.CURSO===curso && x.CPF2?.trim())
+            .map(x=>x.CPF2);
     }
 
     animProg(100);
@@ -129,30 +144,32 @@ const renderSeats=async()=>{
     q("#bus-wrapper").style.display="block";
 };
 
+// Botão CONFIRMAR envia POST para registrar poltrona
 q("#confirmarBtn").onclick=async()=>{
-    if(!sel)return alert("Selecione uma poltrona");
+    if(!sel) return alert("Selecione uma poltrona");
     let cpf=null;
 
     while(true){
         cpf=prompt("CPF (somente números)");
-        if(cpf===null)return;
+        if(cpf===null) return;
         cpf=cpf.replace(/\D/g,'').padStart(11,'0');
-        if(vCPF(cpf))break;
+        if(vCPF(cpf)) break;
         alert("CPF inválido.");
     }
 
-    if(rb.includes(cpf))return alert("Usuário já possui poltrona reservada.");
+    if(rb.includes(cpf)) return alert("Usuário já possui poltrona reservada.");
 
     const h=location.hash.slice(1),
           curso=h.split("/")[1]||"";
     const body={poltrona:sel.textContent,CURSO:curso,cpf};
 
     try{
+        // URL POST para registrar poltrona
         const r=await fetch(
             "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/478aac5453024f5cb3d3b26495d9b7e0/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H6EQYc3xSSZazBjzf0vB_9u5QtwLNj_hnuoBM9CWgz0",
             {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}
         );
-        if(r.ok){alert("Poltrona selecionada com sucesso!");setTimeout(()=>location.reload(),2500)}
+        if(r.ok){alert("Poltrona selecionada com sucesso!"); setTimeout(()=>location.reload(),2500)}
         else alert("Erro ao enviar dados");
     }catch{alert("Erro de comunicação.");}
 };
