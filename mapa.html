@@ -29,7 +29,6 @@ body{font-family:Arial,sans-serif;margin:0;padding:0;display:flex;flex-direction
     position:absolute;bottom:-64px;right:20px
 }
 
-/* CAIXA DO CURSO — COLADA PARA FORA DA BORDA */
 #cursoBox{
     position:absolute;top:60px;left:100%;transform:translateX(0);
     width:40px;height:122px;background:#4CAF50;color:#fff;font-weight:bold;
@@ -118,7 +117,7 @@ const renderSeats=async()=>{
     animProg(70);
 
     if(curso){
-        const res=await fJSON("https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/239ef024d32946f99a66585bed86d236/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ItjHZInk4ZgqUycsWShgWkI1PEphNs_bQhmpReiFwuA");
+        const res=await fJSON("https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/478aac5453024f5cb3d3b26495d9b7e0/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H6EQYc3xSSZazBjzf0vB_9u5QtwLNj_hnuoBM9CWgz0");
         const rows=res?.poltronas||[];
         bl=rows.filter(x=>x.CURSO===curso).map(x=>x.ID.padStart(2,"0"));
         rb=rows.map(x=>x.CPF2);
@@ -144,17 +143,18 @@ q("#confirmarBtn").onclick=async()=>{
 
     if(rb.includes(cpf))return alert("Usuário já possui poltrona reservada.");
 
-    const h=location.hash.slice(1),curso=h.split("/")[1]||"";
+    const h=location.hash.slice(1),
+          curso=h.split("/")[1]||"";
     const body={poltrona:sel.textContent,CURSO:curso,cpf};
 
     try{
         const r=await fetch(
-            "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerautomate/automations/direct/workflows/1b4f6536a25d47d5909b9ccac943a5e8/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=naqfy45S_5sWJoEHTCKIBUbvFpViVRGz4KOXMuyIffw",
+            "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/478aac5453024f5cb3d3b26495d9b7e0/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H6EQYc3xSSZazBjzf0vB_9u5QtwLNj_hnuoBM9CWgz0",
             {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}
         );
         if(r.ok){alert("Poltrona selecionada com sucesso!");setTimeout(()=>location.reload(),2500)}
         else alert("Erro ao enviar dados");
-    }catch{alert("Erro de comunicação.")}
+    }catch{alert("Erro de comunicação.");}
 };
 
 renderSeats();
