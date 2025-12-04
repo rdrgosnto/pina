@@ -57,7 +57,7 @@ let sel=null,rb=[],bl=[];
 
 const fJSON=async u=>{
     try{const r=await fetch(u);return r.ok?await r.json().catch(()=>null):null}
-    catch{return null}
+    catch{return null};
 };
 
 const vCPF=cpf=>{
@@ -130,6 +130,9 @@ const renderSeats=async()=>{
     q("#bus-wrapper").style.display="block";
 };
 
+// =====================
+// BOTÃO CONFIRMAR ATUALIZADO COM LOGS
+// =====================
 q("#confirmarBtn").onclick=async()=>{
     if(!sel)return alert("Selecione uma poltrona");
     let cpf=null;
@@ -147,14 +150,27 @@ q("#confirmarBtn").onclick=async()=>{
     const h=location.hash.slice(1),curso=h.split("/")[1]||"";
     const body={poltrona:sel.textContent,CURSO:curso,cpf};
 
+    console.log("📤 Enviando dados:", body);
+
     try{
-        const r=await fetch(
-            "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerautomate/automations/direct/workflows/1b4f6536a25d47d5909b9ccac943a5e8/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=naqfy45S_5sWJoEHTCKIBUbvFpViVRGz4KOXMuyIffw",
-            {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}
-        );
-        if(r.ok){alert("Poltrona selecionada com sucesso!");setTimeout(()=>location.reload(),2500)}
-        else alert("Erro ao enviar dados");
-    }catch{alert("Erro de comunicação.")}
+        const url="https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerautomate/automations/direct/workflows/1b4f6536a25d47d5909b9ccac943a5e8/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=naqfy45S_5sWJoEHTCKIBUbvFpViVRGz4KOXMuyIffw";
+
+        const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+
+        console.log("📥 Resposta do servidor:", r);
+
+        if(r.ok){
+            alert("Poltrona selecionada com sucesso!");
+            setTimeout(()=>location.reload(),2500);
+        } else {
+            const text=await r.text().catch(()=>"(erro ao ler resposta)");
+            console.error("❌ ERRO NO SERVIDOR:", r.status, text);
+            alert("Erro ao enviar dados (veja o console)");
+        }
+    } catch(err){
+        console.error("💥 FALHA NA REQUISIÇÃO:", err);
+        alert("Erro de comunicação (veja o console)");
+    }
 };
 
 renderSeats();
