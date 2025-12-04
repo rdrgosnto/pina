@@ -77,8 +77,13 @@ const vCPF=cpf=>{
 const cSeat=v=>{
     const e=document.createElement("div");
     if(v===null)e.className="empty";
-    else if(v==="white")e.className="seat white";
-    else{e.className="seat";e.textContent=v.toString().padStart(2,"0")}
+    else if(v==="white") e.className="seat white";
+    else{
+        const n=v.toString().padStart(2,"0");
+        e.className="seat";
+        e.textContent=n;
+        if(bl.includes(n)) e.classList.add("blocked"); // bloqueia poltrona já reservada
+    }
     return e;
 };
 
@@ -93,11 +98,7 @@ const renderGrid=l=>{
     const g=document.createElement("div"); g.className="grid";
     l.flat().forEach(v=>{
         const e=cSeat(v);
-        if(v!==null&&v!=="white"){
-            const n=v.toString().padStart(2,"0");
-            if(bl.includes(n)) e.classList.add("blocked");
-            else e.onclick=()=>select(e);
-        }
+        if(e.classList.contains("seat") && !e.classList.contains("blocked")) e.onclick=()=>select(e);
         g.appendChild(e);
     });
     q(".bus-container").appendChild(g);
@@ -156,7 +157,6 @@ q("#confirmarBtn").onclick=async()=>{
     const body={poltrona:sel.textContent,CURSO:curso,cpf};
 
     try{
-        // URL POST para registrar poltrona
         const r=await fetch(
             "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/478aac5453024f5cb3d3b26495d9b7e0/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H6EQYc3xSSZazBjzf0vB_9u5QtwLNj_hnuoBM9CWgz0",
             {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}
