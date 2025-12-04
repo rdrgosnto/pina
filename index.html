@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Carregando...</title>
+
+<style>
+    /* Cor de fundo verde das poltronas */
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: #1cc88a; /* Ajuste se seu verde for diferente */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    /* Barra de carregamento (container invisível) */
+    .loading-bar {
+        position: absolute;
+        bottom: 0; 
+        left: 0;
+        width: 100%;
+        height: 6px; /* altura da barra */
+        background-color: rgba(255, 255, 255, 0.2);
+        overflow: hidden;
+    }
+
+    /* Barra que cresce da esquerda para a direita */
+    .loading-progress {
+        height: 100%;
+        width: 0%;
+        background-color: white;
+        animation: load 4s linear forwards;
+    }
+
+    @keyframes load {
+        from { width: 0%; }
+        to   { width: 100%; }
+    }
+</style>
+
+<script>
+    // Após 4 segundos redireciona para planner.html com hash
+    setTimeout(() => {
+        window.location.href = "planner.html#0046/AAL";
+    }, 4000);
+</script>
+
+</head>
+<body>
+
+    <!-- Barra de carregamento -->
+    <div class="loading-bar">
+        <div class="loading-progress"></div>
+    </div>
+
+</body>
+</html>
