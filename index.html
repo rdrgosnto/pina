@@ -178,7 +178,7 @@ const renderSeats = async () => {
   if(!aluno){ alert("CPF não encontrado."); return; }
 
   const cursoVal=getFieldIgnoreCase(aluno,"CODIGO","Codigo","codigo");
-  if(!cursoVal){ alert("Aluno encontrado, mas sem código/turma."); return; }
+  if(!cursoVal){ alert("Usuário sem código/turma."); return; }
 
   const curso=cursoVal.toString().trim().toUpperCase();
   currentCurso=curso;
