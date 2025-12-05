@@ -1,4 +1,4 @@
-<!-- CÓDIGO COMPLETO ATUALIZADO -->
+<!-- CÓDIGO COMPLETO ATUALIZADO COM sessionStorage -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -58,6 +58,7 @@ const courseBusMap = {
 const GET_ENDPOINT = "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/239ef024d32946f99a66585bed86d236/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ItjHZInk4ZgqUycsWShgWkI1PEphNs_bQhmpReiFwuA";
 const POST_ENDPOINT = "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/478aac5453024f5cb3d3b26495d9b7e0/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H6EQYc3xSSZazBjzf0vB_9u5QtwLNj_hnuoBM9CWgz0";
 
+/* FUNÇÕES UTILITÁRIAS */
 const fJSON = async u => { try { const r=await fetch(u); return r.ok? await r.json():null; } catch{ return null; }};
 
 const vCPF = cpf => {
@@ -71,6 +72,31 @@ const vCPF = cpf => {
   for(let i=0;i<10;i++) s+=cpf[i]*(11-i);
   r=(s*10)%11; if(r==10) r=0;
   return r==cpf[10];
+};
+
+/* NOVA FUNÇÃO: CPF COM sessionStorage */
+const pedirCPF = () => {
+  const salvo = sessionStorage.getItem("cpf");
+
+  if (salvo && vCPF(salvo)) {
+    currentUserCPF = salvo;
+    return salvo;
+  }
+
+  let cpf = null;
+  while (true) {
+    cpf = prompt("Digite seu CPF (somente números)");
+    if (cpf === null) return null;
+
+    cpf = cpf.replace(/\D/g, "").padStart(11, "0");
+    if (vCPF(cpf)) break;
+
+    alert("CPF inválido.");
+  }
+
+  sessionStorage.setItem("cpf", cpf);
+  currentUserCPF = cpf;
+  return cpf;
 };
 
 const cSeat=v=>{
@@ -123,17 +149,13 @@ const getFieldIgnoreCase=(obj,...names)=>{
   }
 };
 
+/* FUNÇÃO PRINCIPAL */
 const renderSeats = async () => {
 
-  let cpf=null;
-  while(true){
-    cpf = prompt("Digite seu CPF (somente números)");
-    if(cpf===null) return;
-    cpf=cpf.replace(/\D/g,"").padStart(11,"0");
-    if(vCPF(cpf)) break;
-    alert("CPF inválido.");
-  }
-  currentUserCPF=cpf;
+  const cpf = pedirCPF();
+  if (!cpf) return;
+
+  currentUserCPF = cpf;
 
   animProg(20);
 
@@ -161,7 +183,6 @@ const renderSeats = async () => {
   const curso=cursoVal.toString().trim().toUpperCase();
   currentCurso=curso;
 
-  /* ⭐ AQUI: seleciona o JSON correto pela turma */
   currentBus = courseBusMap[curso] || "0046";
 
   q("#cursoText").textContent = curso;
@@ -193,6 +214,7 @@ const renderSeats = async () => {
   q("#bus-wrapper").style.display="block";
 };
 
+/* BOTÃO CONFIRMAR */
 q("#confirmarBtn").onclick=async()=>{
   if(!sel) return alert("Selecione uma poltrona");
   const cpf=currentUserCPF;
