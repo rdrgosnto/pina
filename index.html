@@ -6,27 +6,156 @@
 <title>Planner | Mapa</title>
 
 <style>
-body{font-family:Arial,sans-serif;margin:0;padding:0;display:flex;flex-direction:column;min-height:100vh;justify-content:center;background:#fff}
-#bus-wrapper{transform:scale(.9);transform-origin:top center;display:none}
-.bus-container{padding:20px;border:3px solid #b0b0b0;border-radius:16px;width:fit-content;margin:20px auto;position:relative;display:flex;justify-content:center}
-.grid{display:grid;grid-template-columns:repeat(5,54px);column-gap:10px;row-gap:14px;justify-content:center;justify-items:center}
-.seat,.empty{width:54px;height:54px;display:flex;align-items:center;justify-content:center;border-radius:12px;position:relative}
-.seat{background:#4CAF50;border:3px solid:#4CAF50;color:#fff;font-weight:bold;cursor:pointer}
-.seat::after{content:"";position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);width:32px;height:14px;border-radius:8px;background:#fff;border:3px solid #8c96b2}
+body{
+  font-family:Arial,sans-serif;
+  margin:0;padding:0;
+  display:flex;flex-direction:column;
+  min-height:100vh;
+  justify-content:center;
+  background:#fff;
+}
 
-/* ---- CORREÇÃO AQUI ---- */
-.seat.white{background:#fff;border-color:#8c96b2;color:transparent}
-.seat.white::after{border-color:#8c96b2}
-/* ------------------------ */
+#bus-wrapper{
+  transform:scale(.9);
+  transform-origin:top center;
+  display:none;
+}
 
-.seat.blocked{background:#6b6b6b;border-color:#6b6b6b;color:#fff!important;cursor:not-allowed}
-.seat.selected{background:#e74c3c;border-color:#e74c3c}
+.bus-container{
+  padding:20px;
+  border:3px solid #b0b0b0;
+  border-radius:16px;
+  width:fit-content;
+  margin:20px auto;
+  position:relative;
+  display:flex;justify-content:center;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(5,54px);
+  column-gap:10px;
+  row-gap:14px;
+  justify-content:center;
+  justify-items:center;
+}
+
+.seat, .empty{
+  width:54px;height:54px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:12px;
+  position:relative;
+}
+
+/* ---- POLTRONA NORMAL (VERDE) ---- */
+.seat{
+  background:#4CAF50;
+  border:3px solid #4CAF50;
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+/* Travesseiro das poltronas normais */
+.seat::after{
+  content:"";
+  position:absolute;
+  bottom:-8px;
+  left:50%;
+  transform:translateX(-50%);
+  width:32px;height:14px;
+  border-radius:8px;
+  background:#fff;
+  border:3px solid #8c96b2;
+}
+
+/* ---- POLTRONA BRANCA (INSTRUTOR) ---- */
+.seat.white{
+  background:#fff !important;
+  border:3px solid #8c96b2 !important;
+  color:transparent !important;
+  cursor:default;
+}
+
+/* Travesseiro branco com borda azul */
+.seat.white::after{
+  border-color:#8c96b2 !important;
+}
+
+/* Quando poltrona branca estiver bloqueada — aparência NÃO muda */
+.seat.white.blocked{
+  background:#fff !important;
+  border:3px solid #8c96b2 !important;
+  color:transparent !important;
+  cursor:not-allowed !important;
+}
+
+/* ---- POLTRONA BLOQUEADA (NORMAL CINZA) ---- */
+.seat.blocked{
+  background:#6b6b6b;
+  border-color:#6b6b6b;
+  color:#fff !important;
+  cursor:not-allowed;
+}
+
+/* ---- POLTRONA SELECIONADA (VERMELHA) ---- */
+.seat.selected{
+  background:#e74c3c;
+  border-color:#e74c3c;
+}
+
 .empty{background:transparent}
-#progress-bar-container{position:fixed;bottom:0;left:0;width:100%;height:8px;background:rgba(0,0,0,.1);z-index:9999}
-#progress-bar{width:0;height:100%;background:#4CAF50;transition:width .1s linear}
-#confirmarBtn{width:112px;height:54px;background:#4CAF50;color:#fff;border:none;font-size:16px;font-weight:bold;border-radius:12px;cursor:pointer;position:absolute;bottom:-64px;right:20px}
-#cursoBox{position:absolute;top:60px;left:100%;width:40px;height:122px;background:#4CAF50;color:#fff;font-weight:bold;display:flex;align-items:center;justify-content:center;z-index:9999;overflow:hidden;border:0;pointer-events:none}
-#cursoText{transform:rotate(-90deg);font-size:18px;white-space:nowrap;line-height:1}
+
+/* Barra de progresso */
+#progress-bar-container{
+  position:fixed;
+  bottom:0;left:0;
+  width:100%;height:8px;
+  background:rgba(0,0,0,.1);
+  z-index:9999;
+}
+#progress-bar{
+  width:0;height:100%;
+  background:#4CAF50;
+  transition:width .1s linear;
+}
+
+/* Botão confirmar */
+#confirmarBtn{
+  width:112px;height:54px;
+  background:#4CAF50;
+  color:#fff;border:none;
+  font-size:16px;font-weight:bold;
+  border-radius:12px;
+  cursor:pointer;
+  position:absolute;
+  bottom:-64px;right:20px;
+}
+
+/* Caixa do curso lateral */
+#cursoBox{
+  position:absolute;
+  top:60px;left:100%;
+  width:40px;height:122px;
+  background:#4CAF50;
+  color:#fff;
+  font-weight:bold;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+  overflow:hidden;
+  border:0;
+  pointer-events:none;
+}
+#cursoText{
+  transform:rotate(-90deg);
+  font-size:18px;
+  white-space:nowrap;
+  line-height:1;
+}
 </style>
 </head>
 
@@ -52,6 +181,7 @@ const POST_ENDPOINT="https://default264c851fa4e743cf86bcd7b10dca85.78.environmen
 
 const fJSON=async u=>{try{const r=await fetch(u);return r.ok?await r.json():null;}catch{return null;}};
 
+/* CPF validation */
 const vCPF=cpf=>{
   cpf=cpf.replace(/\D/g,'').padStart(11,'0');
   if(cpf.length!==11||/^(\d)\1+$/.test(cpf))return false;
@@ -65,6 +195,7 @@ const vCPF=cpf=>{
   return r==cpf[10];
 };
 
+/* CPF prompt */
 const pedirCPF=()=>{
   const salvo=sessionStorage.getItem("cpf");
   if(salvo&&vCPF(salvo)){ currentUserCPF=salvo; return salvo; }
@@ -82,42 +213,66 @@ const pedirCPF=()=>{
   return cpf;
 };
 
+/* Criação da poltrona */
 const cSeat=v=>{
   const e=document.createElement("div");
-  if(v===null)e.className="empty";
-  else if(v==="white")e.className="seat white";
-  else{e.className="seat";e.textContent=v.toString().padStart(2,"0");}
+
+  if(v===null){
+    e.className="empty";
+  } 
+  else if(v==="white"){
+    e.className="seat white";
+  } 
+  else {
+    e.className="seat";
+    e.textContent=v.toString().padStart(2,"0");
+  }
   return e;
 };
 
+/* Progress bar animation */
 const animProg=t=>{
   let w=parseFloat(q("#progress-bar").style.width)||0;
   const step=()=>{if(w<t){w+=.5;q("#progress-bar").style.width=w+"%";requestAnimationFrame(step);}};
   step();
 };
 
+/* Render grid */
 const renderGrid=layout=>{
   const wrap=q(".bus-container");
   wrap.querySelector(".grid")?.remove();
-  const g=document.createElement("div"); g.className="grid";
+  const g=document.createElement("div"); 
+  g.className="grid";
 
   layout.flat().forEach(v=>{
     const e=cSeat(v);
-    if(v!==null&&v!=="white"){
+
+    if(v!==null && v!=="white"){
       const n=v.toString().padStart(2,"0");
-      if(bl.includes(n))e.classList.add("blocked");
-      else e.onclick=()=>select(e);
+      if(bl.includes(n)){
+        e.classList.add("blocked");
+      } else {
+        e.onclick=()=>select(e);
+      }
     }
+
     g.appendChild(e);
   });
 
   wrap.appendChild(g);
 };
 
+/* Select seat */
 const select=e=>{
   if(e.classList.contains("blocked"))return;
-  if(e.classList.contains("selected")){e.classList.remove("selected");sel=null;}
-  else{sel?.classList.remove("selected");e.classList.add("selected");sel=e;}
+  if(e.classList.contains("white"))return; // branca não seleciona
+  if(e.classList.contains("selected")){
+    e.classList.remove("selected"); sel=null;
+  } else {
+    sel?.classList.remove("selected");
+    e.classList.add("selected");
+    sel=e;
+  }
 };
 
 const getFieldIgnoreCase=(obj,...names)=>{
@@ -180,6 +335,7 @@ const renderSeats=async()=>{
   q("#bus-wrapper").style.display="block";
 };
 
+/* Enviar seleção */
 q("#confirmarBtn").onclick=async()=>{
   if(!sel)return alert("Selecione uma poltrona");
   if(rb.includes(currentUserCPF))return alert("Usuário já possui reserva.");
@@ -197,7 +353,9 @@ q("#confirmarBtn").onclick=async()=>{
       alert("Poltrona selecionada!");
       setTimeout(()=>location.reload(),2500);
     }else alert("Erro ao enviar reserva.");
-  }catch{ alert("Erro de comunicação."); }
+  }catch{
+    alert("Erro de comunicação.");
+  }
 };
 
 renderSeats();
