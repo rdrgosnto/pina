@@ -1,1 +1,283 @@
-<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Planner | Mapa</title><style>body{font-family:Arial,sans-serif;margin:0;padding:0;display:flex;flex-direction:column;min-height:100vh;justify-content:center;background:#fff}#bus-wrapper{transform:scale(.9);transform-origin:top center;display:none}.bus-container{padding:20px;border:3px solid #b0b0b0;border-radius:16px;width:fit-content;margin:20px auto;position:relative;display:flex;justify-content:center}.grid{display:grid;grid-template-columns:repeat(5,54px);column-gap:10px;row-gap:14px;justify-content:center;justify-items:center}.seat,.empty{width:54px;height:54px;display:flex;align-items:center;justify-content:center;border-radius:12px;position:relative}.seat{background:#4CAF50;border:3px solid #4CAF50;color:#fff;font-weight:bold;cursor:pointer}.seat::after{content:"";position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);width:32px;height:14px;border-radius:8px;background:#fff;border:3px solid #8c96b2}.seat.white{background:#fff;border-color:#ccc;color:transparent}.seat.white::after{border-color:#ccc}.seat.blocked{background:#6b6b6b;border-color:#6b6b6b;color:#fff!important;cursor:not-allowed}.seat.selected{background:#e74c3c;border-color:#e74c3c}.empty{background:transparent}#progress-bar-container{position:fixed;bottom:0;left:0;width:100%;height:8px;background:rgba(0,0,0,.1);z-index:9999}#progress-bar{width:0;height:100%;background:#4CAF50;transition:width .1s linear}#confirmarBtn{width:112px;height:54px;background:#4CAF50;color:#fff;border:none;font-size:16px;font-weight:bold;border-radius:12px;cursor:pointer;position:absolute;bottom:-64px;right:20px}#cursoBox{position:absolute;top:60px;left:100%;transform:translateX(0);width:40px;height:122px;background:#4CAF50;color:#fff;font-weight:bold;display:flex;align-items:center;justify-content:center;z-index:9999;overflow:hidden;border:0;pointer-events:none}#cursoText{transform:rotate(-90deg);font-size:18px;white-space:nowrap;line-height:1}</style></head><body><div id="bus-wrapper"><div class="bus-container"><div id="cursoBox"><div id="cursoText"></div></div><button id="confirmarBtn">CONFIRMAR</button></div></div><div id="progress-bar-container"><div id="progress-bar"></div></div><script>const q=(s,d=document)=>d.querySelector(s);let sel=null,rb=[],bl=[];const fJSON=async u=>{try{const r=await fetch(u);return r.ok?await r.json().catch(()=>null):null}catch{return null}};const vCPF=cpf=>{cpf=cpf.replace(/\D/g,'').padStart(11,'0');if(cpf.length!==11||/^(\d)\1+$/.test(cpf))return false;let s=0;for(let i=0;i<9;i++)s+=cpf[i]*(10-i);let r=(s*10)%11;if(r==10)r=0;if(r!=cpf[9])return false;s=0;for(let i=0;i<10;i++)s+=cpf[i]*(11-i);r=(s*10)%11;if(r==10)r=0;return r==cpf[10]};const cSeat=v=>{const e=document.createElement("div");if(v===null)e.className="empty";else if(v==="white")e.className="seat white";else e.className="seat",e.textContent=v.toString().padStart(2,"0");return e};const animProg=t=>{let w=parseFloat(q("#progress-bar").style.width)||0;const step=()=>{if(w<t){w+=.5;q("#progress-bar").style.width=w+"%";requestAnimationFrame(step)}};step()};const renderGrid=l=>{const g=document.createElement("div");g.className="grid";l.flat().forEach(v=>{const e=cSeat(v);if(v!==null&&v!=="white"){const n=v.toString().padStart(2,"0");if(bl.includes(n))e.classList.add("blocked");else e.onclick=()=>select(e)}g.appendChild(e)});q(".bus-container").appendChild(g)};const select=e=>{if(e.classList.contains("blocked"))return;if(e.classList.contains("selected")){e.classList.remove("selected");sel=null}else{if(sel)sel.classList.remove("selected");e.classList.add("selected");sel=e}};const renderSeats=async()=>{let h=location.hash.slice(1),[bus,curso]=h.split("/");bus=bus||"0052";curso=curso||"";q("#cursoText").textContent=curso.toUpperCase();animProg(40);const cfg=await fJSON(`./configs/${bus}.json`);if(!cfg){alert("Erro ao carregar layout.");return}animProg(70);if(curso){const res=await fJSON("https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/239ef024d32946f99a66585bed86d236/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ItjHZInk4ZgqUycsWShgWkI1PEphNs_bQhmpReiFwuA");const rows=res?.poltronas||[];const cursoRows=rows.filter(x=>x.CURSO===curso);const uniqueIDs=[...new Set(cursoRows.map(x=>x.ID.padStart(2,"0")))];bl=uniqueIDs;rb=cursoRows.map(x=>x.CPF2).filter(cpf=>cpf)}animProg(100);renderGrid(cfg.layout);setTimeout(()=>q("#progress-bar-container").remove(),600);q("#bus-wrapper").style.display="block"};q("#confirmarBtn").onclick=async()=>{if(!sel)return alert("Selecione uma poltrona");let cpf=null;while(true){cpf=prompt("CPF (somente números)");if(cpf===null)return;cpf=cpf.replace(/\D/g,'').padStart(11,'0');if(vCPF(cpf))break;alert("CPF inválido.")}if(rb.includes(cpf))return alert("Usuário já possui poltrona reservada.");const h=location.hash.slice(1),curso=h.split("/")[1]||"";const body={poltrona:sel.textContent,CURSO:curso,cpf};try{const r=await fetch("https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/478aac5453024f5cb3d3b26495d9b7e0/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H6EQYc3xSSZazBjzf0vB_9u5QtwLNj_hnuoBM9CWgz0",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});if(r.ok){alert("Poltrona selecionada com sucesso!");setTimeout(()=>location.reload(),2500)}else alert("Erro ao enviar dados")}catch{alert("Erro de comunicação.")}};renderSeats();</script></body></html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Planner | Mapa</title>
+<style>
+  body{font-family:Arial,sans-serif;margin:0;padding:0;display:flex;flex-direction:column;min-height:100vh;justify-content:center;background:#fff}
+  #bus-wrapper{transform:scale(.9);transform-origin:top center;display:none}
+  .bus-container{padding:20px;border:3px solid #b0b0b0;border-radius:16px;width:fit-content;margin:20px auto;position:relative;display:flex;justify-content:center}
+  .grid{display:grid;grid-template-columns:repeat(5,54px);column-gap:10px;row-gap:14px;justify-content:center;justify-items:center}
+  .seat,.empty{width:54px;height:54px;display:flex;align-items:center;justify-content:center;border-radius:12px;position:relative}
+  .seat{background:#4CAF50;border:3px solid #4CAF50;color:#fff;font-weight:bold;cursor:pointer}
+  .seat::after{content:"";position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);width:32px;height:14px;border-radius:8px;background:#fff;border:3px solid #8c96b2}
+  .seat.white{background:#fff;border-color:#ccc;color:transparent}
+  .seat.white::after{border-color:#ccc}
+  .seat.blocked{background:#6b6b6b;border-color:#6b6b6b;color:#fff!important;cursor:not-allowed}
+  .seat.selected{background:#e74c3c;border-color:#e74c3c}
+  .empty{background:transparent}
+  #progress-bar-container{position:fixed;bottom:0;left:0;width:100%;height:8px;background:rgba(0,0,0,.1);z-index:9999}
+  #progress-bar{width:0;height:100%;background:#4CAF50;transition:width .1s linear}
+  #confirmarBtn{width:112px;height:54px;background:#4CAF50;color:#fff;border:none;font-size:16px;font-weight:bold;border-radius:12px;cursor:pointer;position:absolute;bottom:-64px;right:20px}
+  #cursoBox{position:absolute;top:60px;left:100%;transform:translateX(0);width:40px;height:122px;background:#4CAF50;color:#fff;font-weight:bold;display:flex;align-items:center;justify-content:center;z-index:9999;overflow:hidden;border:0;pointer-events:none}
+  #cursoText{transform:rotate(-90deg);font-size:18px;white-space:nowrap;line-height:1}
+</style>
+</head>
+<body>
+  <div id="bus-wrapper">
+    <div class="bus-container">
+      <div id="cursoBox"><div id="cursoText"></div></div>
+      <button id="confirmarBtn">CONFIRMAR</button>
+    </div>
+  </div>
+
+  <div id="progress-bar-container"><div id="progress-bar"></div></div>
+
+<script>
+/* utilidades */
+const q=(s,d=document)=>d.querySelector(s);
+
+/* estado */
+let sel = null;
+let rb = []; // reserved CPFs (da turma)
+let bl = []; // blocked seat IDs (strings com 2 dígitos)
+let currentUserCPF = null;
+let currentCurso = "";
+let currentBus = "0052";
+
+/* endpoint GET que retorna poltronas + codigo/cursos */
+const GET_ENDPOINT = "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/239ef024d32946f99a66585bed86d236/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ItjHZInk4ZgqUycsWShgWkI1PEphNs_bQhmpReiFwuA";
+
+/* endpoint POST para confirmar reserva (mantive seu endpoint) */
+const POST_ENDPOINT = "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/478aac5453024f5cb3d3b26495d9b7e0/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H6EQYc3xSSZazBjzf0vB_9u5QtwLNj_hnuoBM9CWgz0";
+
+/* mapeamento curso -> ônibus (mude aqui caso queira cursos em ônibus diferentes) */
+const courseBusMap = {
+  // exemplo: "AAL": "0046",
+  // por padrão todas apontam para 0052
+};
+
+/* fetch JSON helper */
+const fJSON = async u => {
+  try {
+    const r = await fetch(u);
+    return r.ok ? await r.json().catch(()=>null) : null;
+  } catch(e) { return null; }
+};
+
+/* valida CPF (mantive sua função) */
+const vCPF = cpf => {
+  cpf = cpf.replace(/\D/g,'').padStart(11,'0');
+  if(cpf.length!==11||/^(\d)\1+$/.test(cpf)) return false;
+  let s=0;
+  for(let i=0;i<9;i++) s+=cpf[i]*(10-i);
+  let r=(s*10)%11; if(r==10) r=0;
+  if(r!=cpf[9]) return false;
+  s=0;
+  for(let i=0;i<10;i++) s+=cpf[i]*(11-i);
+  r=(s*10)%11; if(r==10) r=0;
+  return r==cpf[10];
+};
+
+/* cria elemento de poltrona */
+const cSeat=v=>{
+  const e=document.createElement("div");
+  if(v===null) e.className="empty";
+  else if(v==="white") e.className="seat white";
+  else e.className="seat", e.textContent = v.toString().padStart(2,"0");
+  return e;
+};
+
+/* anima barra de progresso (0-100) */
+const animProg = t => {
+  let w = parseFloat(q("#progress-bar").style.width) || 0;
+  const step = ()=>{
+    if(w < t){ w += .5; q("#progress-bar").style.width = w + "%"; requestAnimationFrame(step); }
+  };
+  step();
+};
+
+/* renderiza grid do ônibus */
+const renderGrid = layout => {
+  const container = q(".bus-container");
+  // remove grid anterior se existir
+  const prev = container.querySelector(".grid");
+  if(prev) prev.remove();
+  const g = document.createElement("div");
+  g.className = "grid";
+  layout.flat().forEach(v=>{
+    const e = cSeat(v);
+    if(v !== null && v !== "white"){
+      const n = v.toString().padStart(2,"0");
+      if(bl.includes(n)) e.classList.add("blocked");
+      else e.onclick = ()=> select(e);
+    }
+    g.appendChild(e);
+  });
+  container.appendChild(g);
+};
+
+/* seleção de poltrona */
+const select = e => {
+  if(e.classList.contains("blocked")) return;
+  if(e.classList.contains("selected")) { e.classList.remove("selected"); sel = null; }
+  else { if(sel) sel.classList.remove("selected"); e.classList.add("selected"); sel = e; }
+};
+
+/* helper: leitura de campo com nomes variantes (caso insensível) */
+const getFieldIgnoreCase = (obj, ...names) => {
+  if(!obj) return undefined;
+  const keys = Object.keys(obj);
+  for(const name of names){
+    const k = keys.find(x=>x.toLowerCase() === name.toLowerCase());
+    if(k) return obj[k];
+  }
+  return undefined;
+};
+
+/* função principal que pede CPF, consulta e carrega mapa */
+const renderSeats = async () => {
+  // ler hash atual (se tiver) mas vamos pedir CPF sempre
+  let h = location.hash.slice(1);
+  let [busFromHash, cursoFromHash] = h.split("/");
+  busFromHash = busFromHash || "";
+  cursoFromHash = cursoFromHash || "";
+
+  // pedir CPF antes de mostrar mapa
+  let cpf=null;
+  while(true){
+    cpf = prompt("Digite seu CPF (somente números)");
+    if(cpf === null) return; // usuário cancelou
+    cpf = cpf.replace(/\D/g,"").padStart(11,"0");
+    if(vCPF(cpf)) break;
+    alert("CPF inválido.");
+  }
+  currentUserCPF = cpf;
+  animProg(20);
+
+  // buscar dados unificados do fluxo (poltronas + codigo/cursos)
+  const res = await fJSON(GET_ENDPOINT);
+  if(!res){ alert("Erro ao consultar dados. Tente novamente."); return; }
+  // suporte a nomes diferentes: poltronas ou lista
+  const lista = res?.poltronas || res?.lista || [];
+  // suporte a codigo/cursos
+  const codigos = res?.codigo || res?.cursos || res?.codigo || [];
+
+  animProg(50);
+
+  // localizar aluno na tabela de códigos por CPF (várias possíveis variações do campo)
+  const normalizeCPFVal = v => v ? v.toString().replace(/\D/g,"").padStart(11,"0") : "";
+  let aluno = null;
+  for(const row of codigos){
+    const cpfField = getFieldIgnoreCase(row, "CPF2", "CPF", "cpf2", "cpf");
+    if(normalizeCPFVal(cpfField) === currentUserCPF){
+      aluno = row; break;
+    }
+  }
+
+  if(!aluno){
+    alert("CPF não encontrado na tabela de códigos. Se seu CPF deveria constar, contate a organização.");
+    return;
+  }
+
+  // pegar o código/turma do aluno (nomes possíveis: CODIGO, Codigo, codigo)
+  const cursoVal = getFieldIgnoreCase(aluno, "CODIGO", "Codigo", "codigo");
+  if(!cursoVal){
+    alert("Aluno encontrado, mas não foi possível identificar o código/turma associado.");
+    return;
+  }
+  const curso = cursoVal.toString().trim().toUpperCase();
+  currentCurso = curso;
+
+  // decidir qual ônibus carregar (podemos mapear cursos para ônibus diferentes)
+  const bus = courseBusMap[curso] || busFromHash || currentBus;
+  currentBus = bus;
+
+  // atualizar a UI do curso (texto) e também o hash para persistir
+  q("#cursoText").textContent = curso;
+  location.hash = `${currentBus}/${curso}`;
+
+  animProg(70);
+
+  // carregar configuração do layout do ônibus (arquivo JSON local)
+  const cfg = await fJSON(`./configs/${currentBus}.json`);
+  if(!cfg){ alert("Erro ao carregar layout do ônibus."); return; }
+
+  // bloquear poltronas: filtrar lista por CURSO (suporta variações de nome de campo)
+  const cursoFieldNameCandidates = ["CURSO","Curso","curso"];
+  const idFieldCandidates = ["ID","Id","id"];
+  const cpf2FieldCandidates = ["CPF2","Cpf2","cpf2","CPF","cpf"];
+
+  const cursoRows = lista.filter(x => {
+    const cv = getFieldIgnoreCase(x, ...cursoFieldNameCandidates);
+    return (cv && cv.toString().trim().toUpperCase() === curso);
+  });
+
+  // bloquear por ID (padStart 2)
+  const uniqueIDs = [...new Set(cursoRows.map(x=>{
+    const idV = getFieldIgnoreCase(x, ...idFieldCandidates);
+    return idV ? idV.toString().padStart(2,"0") : null;
+  }).filter(Boolean))];
+  bl = uniqueIDs;
+
+  // rb = CPFs já reservados na turma
+  rb = cursoRows.map(x => {
+    const cpfv = getFieldIgnoreCase(x, ...cpf2FieldCandidates);
+    return cpfv ? cpfv.toString().replace(/\D/g,"").padStart(11,"0") : null;
+  }).filter(Boolean);
+
+  animProg(100);
+
+  // mostrar grade
+  renderGrid(cfg.layout);
+  setTimeout(()=> q("#progress-bar-container").remove(), 600);
+  q("#bus-wrapper").style.display = "block";
+};
+
+/* ao clicar em confirmar -> usa currentUserCPF (já coletado) e envia reserva */
+q("#confirmarBtn").onclick = async () => {
+  if(!sel) return alert("Selecione uma poltrona");
+  // se não houver CPF armazenado (por algum motivo), pedir novamente
+  let cpf = currentUserCPF;
+  if(!cpf){
+    while(true){
+      cpf = prompt("CPF (somente números)");
+      if(cpf === null) return;
+      cpf = cpf.replace(/\D/g,'').padStart(11,'0');
+      if(vCPF(cpf)) break;
+      alert("CPF inválido.");
+    }
+    currentUserCPF = cpf;
+  }
+
+  if(rb.includes(cpf)) return alert("Usuário já possui poltrona reservada.");
+
+  // curso atual da hash (fallback para currentCurso)
+  const h = location.hash.slice(1);
+  const curso = (h.split("/")[1] || currentCurso || "").toUpperCase();
+
+  const body = { poltrona: sel.textContent, CURSO: curso, cpf };
+
+  try{
+    const r = await fetch(POST_ENDPOINT, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(body)
+    });
+    if(r.ok){
+      alert("Poltrona selecionada com sucesso!");
+      setTimeout(()=> location.reload(), 2500);
+    } else {
+      alert("Erro ao enviar dados");
+    }
+  }catch(e){
+    alert("Erro de comunicação.");
+  }
+};
+
+/* inicializa */
+renderSeats();
+</script>
+</body>
+</html>
