@@ -1,9 +1,11 @@
+<!-- CÓDIGO COMPLETO ATUALIZADO -->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1.0" />
 <title>Planner | Mapa</title>
+
 <style>
   body{font-family:Arial,sans-serif;margin:0;padding:0;display:flex;flex-direction:column;min-height:100vh;justify-content:center;background:#fff}
   #bus-wrapper{transform:scale(.9);transform-origin:top center;display:none}
@@ -35,40 +37,31 @@
   <div id="progress-bar-container"><div id="progress-bar"></div></div>
 
 <script>
-/* utilidades */
 const q=(s,d=document)=>d.querySelector(s);
 
 /* estado */
 let sel = null;
-let rb = []; // reserved CPFs (da turma)
-let bl = []; // blocked seat IDs (strings com 2 dígitos)
+let rb = [];
+let bl = [];
 let currentUserCPF = null;
 let currentCurso = "";
-let currentBus = "0052";
+let currentBus = "";
 
-/* endpoint GET que retorna poltronas + codigo/cursos */
+/* MAPEAMENTO DA TURMA → ARQUIVO JSON */
+const courseBusMap = {
+  "AAL": "0046",
+  "ALI": "0050",
+  "QUI": "0052",
+};
+
+/* ENDPOINTS */
 const GET_ENDPOINT = "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/239ef024d32946f99a66585bed86d236/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=ItjHZInk4ZgqUycsWShgWkI1PEphNs_bQhmpReiFwuA";
-
-/* endpoint POST para confirmar reserva (mantive seu endpoint) */
 const POST_ENDPOINT = "https://default264c851fa4e743cf86bcd7b10dca85.78.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/478aac5453024f5cb3d3b26495d9b7e0/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=H6EQYc3xSSZazBjzf0vB_9u5QtwLNj_hnuoBM9CWgz0";
 
-/* mapeamento curso -> ônibus (mude aqui caso queira cursos em ônibus diferentes) */
-const courseBusMap = {
-  // exemplo: "AAL": "0046",
-  // por padrão todas apontam para 0052
-};
+const fJSON = async u => { try { const r=await fetch(u); return r.ok? await r.json():null; } catch{ return null; }};
 
-/* fetch JSON helper */
-const fJSON = async u => {
-  try {
-    const r = await fetch(u);
-    return r.ok ? await r.json().catch(()=>null) : null;
-  } catch(e) { return null; }
-};
-
-/* valida CPF (mantive sua função) */
 const vCPF = cpf => {
-  cpf = cpf.replace(/\D/g,'').padStart(11,'0');
+  cpf=cpf.replace(/\D/g,'').padStart(11,'0');
   if(cpf.length!==11||/^(\d)\1+$/.test(cpf)) return false;
   let s=0;
   for(let i=0;i<9;i++) s+=cpf[i]*(10-i);
@@ -80,203 +73,150 @@ const vCPF = cpf => {
   return r==cpf[10];
 };
 
-/* cria elemento de poltrona */
 const cSeat=v=>{
   const e=document.createElement("div");
   if(v===null) e.className="empty";
   else if(v==="white") e.className="seat white";
-  else e.className="seat", e.textContent = v.toString().padStart(2,"0");
+  else e.className="seat", e.textContent=v.toString().padStart(2,"0");
   return e;
 };
 
-/* anima barra de progresso (0-100) */
-const animProg = t => {
-  let w = parseFloat(q("#progress-bar").style.width) || 0;
-  const step = ()=>{
-    if(w < t){ w += .5; q("#progress-bar").style.width = w + "%"; requestAnimationFrame(step); }
-  };
+const animProg=t=>{
+  let w=parseFloat(q("#progress-bar").style.width)||0;
+  const step=()=>{ if(w<t){ w+=.5; q("#progress-bar").style.width=w+"%"; requestAnimationFrame(step);} };
   step();
 };
 
-/* renderiza grid do ônibus */
-const renderGrid = layout => {
-  const container = q(".bus-container");
-  // remove grid anterior se existir
-  const prev = container.querySelector(".grid");
+const renderGrid=layout=>{
+  const container=q(".bus-container");
+  const prev=container.querySelector(".grid");
   if(prev) prev.remove();
-  const g = document.createElement("div");
-  g.className = "grid";
+
+  const g=document.createElement("div");
+  g.className="grid";
+
   layout.flat().forEach(v=>{
-    const e = cSeat(v);
-    if(v !== null && v !== "white"){
-      const n = v.toString().padStart(2,"0");
+    const e=cSeat(v);
+    if(v!==null && v!=="white"){
+      const n=v.toString().padStart(2,"0");
       if(bl.includes(n)) e.classList.add("blocked");
-      else e.onclick = ()=> select(e);
+      else e.onclick=()=>select(e);
     }
     g.appendChild(e);
   });
+
   container.appendChild(g);
 };
 
-/* seleção de poltrona */
-const select = e => {
+const select=e=>{
   if(e.classList.contains("blocked")) return;
-  if(e.classList.contains("selected")) { e.classList.remove("selected"); sel = null; }
-  else { if(sel) sel.classList.remove("selected"); e.classList.add("selected"); sel = e; }
+  if(e.classList.contains("selected")){ e.classList.remove("selected"); sel=null; }
+  else{ if(sel) sel.classList.remove("selected"); e.classList.add("selected"); sel=e; }
 };
 
-/* helper: leitura de campo com nomes variantes (caso insensível) */
-const getFieldIgnoreCase = (obj, ...names) => {
-  if(!obj) return undefined;
-  const keys = Object.keys(obj);
-  for(const name of names){
-    const k = keys.find(x=>x.toLowerCase() === name.toLowerCase());
+const getFieldIgnoreCase=(obj,...names)=>{
+  if(!obj) return;
+  const ks=Object.keys(obj);
+  for(const n of names){
+    const k=ks.find(x=>x.toLowerCase()===n.toLowerCase());
     if(k) return obj[k];
   }
-  return undefined;
 };
 
-/* função principal que pede CPF, consulta e carrega mapa */
 const renderSeats = async () => {
-  // ler hash atual (se tiver) mas vamos pedir CPF sempre
-  let h = location.hash.slice(1);
-  let [busFromHash, cursoFromHash] = h.split("/");
-  busFromHash = busFromHash || "";
-  cursoFromHash = cursoFromHash || "";
 
-  // pedir CPF antes de mostrar mapa
   let cpf=null;
   while(true){
     cpf = prompt("Digite seu CPF (somente números)");
-    if(cpf === null) return; // usuário cancelou
-    cpf = cpf.replace(/\D/g,"").padStart(11,"0");
+    if(cpf===null) return;
+    cpf=cpf.replace(/\D/g,"").padStart(11,"0");
     if(vCPF(cpf)) break;
     alert("CPF inválido.");
   }
-  currentUserCPF = cpf;
+  currentUserCPF=cpf;
+
   animProg(20);
 
-  // buscar dados unificados do fluxo (poltronas + codigo/cursos)
-  const res = await fJSON(GET_ENDPOINT);
-  if(!res){ alert("Erro ao consultar dados. Tente novamente."); return; }
-  // suporte a nomes diferentes: poltronas ou lista
+  const res=await fJSON(GET_ENDPOINT);
+  if(!res){ alert("Erro ao consultar dados."); return; }
+
   const lista = res?.poltronas || res?.lista || [];
-  // suporte a codigo/cursos
-  const codigos = res?.codigo || res?.cursos || res?.codigo || [];
+  const codigos = res?.codigo || res?.cursos || [];
 
   animProg(50);
 
-  // localizar aluno na tabela de códigos por CPF (várias possíveis variações do campo)
-  const normalizeCPFVal = v => v ? v.toString().replace(/\D/g,"").padStart(11,"0") : "";
-  let aluno = null;
+  const normalizeCPF=v=> v? v.toString().replace(/\D/g,"").padStart(11,"0"):"";
+
+  let aluno=null;
   for(const row of codigos){
-    const cpfField = getFieldIgnoreCase(row, "CPF2", "CPF", "cpf2", "cpf");
-    if(normalizeCPFVal(cpfField) === currentUserCPF){
-      aluno = row; break;
-    }
+    const cpfField=getFieldIgnoreCase(row,"CPF2","CPF");
+    if(normalizeCPF(cpfField)===currentUserCPF){ aluno=row; break; }
   }
 
-  if(!aluno){
-    alert("CPF não encontrado na tabela de códigos. Se seu CPF deveria constar, contate a organização.");
-    return;
-  }
+  if(!aluno){ alert("CPF não encontrado."); return; }
 
-  // pegar o código/turma do aluno (nomes possíveis: CODIGO, Codigo, codigo)
-  const cursoVal = getFieldIgnoreCase(aluno, "CODIGO", "Codigo", "codigo");
-  if(!cursoVal){
-    alert("Aluno encontrado, mas não foi possível identificar o código/turma associado.");
-    return;
-  }
-  const curso = cursoVal.toString().trim().toUpperCase();
-  currentCurso = curso;
+  const cursoVal=getFieldIgnoreCase(aluno,"CODIGO","Codigo","codigo");
+  if(!cursoVal){ alert("Aluno encontrado, mas sem código/turma."); return; }
 
-  // decidir qual ônibus carregar (podemos mapear cursos para ônibus diferentes)
-  const bus = courseBusMap[curso] || busFromHash || currentBus;
-  currentBus = bus;
+  const curso=cursoVal.toString().trim().toUpperCase();
+  currentCurso=curso;
 
-  // atualizar a UI do curso (texto) e também o hash para persistir
+  /* ⭐ AQUI: seleciona o JSON correto pela turma */
+  currentBus = courseBusMap[curso] || "0052";
+
   q("#cursoText").textContent = curso;
-  location.hash = `${currentBus}/${curso}`;
 
   animProg(70);
 
-  // carregar configuração do layout do ônibus (arquivo JSON local)
   const cfg = await fJSON(`./configs/${currentBus}.json`);
-  if(!cfg){ alert("Erro ao carregar layout do ônibus."); return; }
+  if(!cfg){ alert("Erro ao carregar layout."); return; }
 
-  // bloquear poltronas: filtrar lista por CURSO (suporta variações de nome de campo)
-  const cursoFieldNameCandidates = ["CURSO","Curso","curso"];
-  const idFieldCandidates = ["ID","Id","id"];
-  const cpf2FieldCandidates = ["CPF2","Cpf2","cpf2","CPF","cpf"];
-
-  const cursoRows = lista.filter(x => {
-    const cv = getFieldIgnoreCase(x, ...cursoFieldNameCandidates);
-    return (cv && cv.toString().trim().toUpperCase() === curso);
+  const cursoRows = lista.filter(x=>{
+    const cv=getFieldIgnoreCase(x,"CURSO","Curso","curso");
+    return cv && cv.toString().trim().toUpperCase()===curso;
   });
 
-  // bloquear por ID (padStart 2)
-  const uniqueIDs = [...new Set(cursoRows.map(x=>{
-    const idV = getFieldIgnoreCase(x, ...idFieldCandidates);
-    return idV ? idV.toString().padStart(2,"0") : null;
+  bl=[...new Set(cursoRows.map(x=>{
+    const idV=getFieldIgnoreCase(x,"ID","Id","id");
+    return idV? idV.toString().padStart(2,"0"):null;
   }).filter(Boolean))];
-  bl = uniqueIDs;
 
-  // rb = CPFs já reservados na turma
-  rb = cursoRows.map(x => {
-    const cpfv = getFieldIgnoreCase(x, ...cpf2FieldCandidates);
-    return cpfv ? cpfv.toString().replace(/\D/g,"").padStart(11,"0") : null;
+  rb=cursoRows.map(x=>{
+    const cpfv=getFieldIgnoreCase(x,"CPF2","Cpf2","cpf2","CPF","cpf");
+    return cpfv? cpfv.toString().replace(/\D/g,"").padStart(11,"0"):null;
   }).filter(Boolean);
 
   animProg(100);
 
-  // mostrar grade
   renderGrid(cfg.layout);
-  setTimeout(()=> q("#progress-bar-container").remove(), 600);
-  q("#bus-wrapper").style.display = "block";
+  setTimeout(()=> q("#progress-bar-container").remove(),600);
+  q("#bus-wrapper").style.display="block";
 };
 
-/* ao clicar em confirmar -> usa currentUserCPF (já coletado) e envia reserva */
-q("#confirmarBtn").onclick = async () => {
+q("#confirmarBtn").onclick=async()=>{
   if(!sel) return alert("Selecione uma poltrona");
-  // se não houver CPF armazenado (por algum motivo), pedir novamente
-  let cpf = currentUserCPF;
-  if(!cpf){
-    while(true){
-      cpf = prompt("CPF (somente números)");
-      if(cpf === null) return;
-      cpf = cpf.replace(/\D/g,'').padStart(11,'0');
-      if(vCPF(cpf)) break;
-      alert("CPF inválido.");
-    }
-    currentUserCPF = cpf;
-  }
+  const cpf=currentUserCPF;
 
-  if(rb.includes(cpf)) return alert("Usuário já possui poltrona reservada.");
+  if(rb.includes(cpf)) return alert("Você já possui reserva.");
 
-  // curso atual da hash (fallback para currentCurso)
-  const h = location.hash.slice(1);
-  const curso = (h.split("/")[1] || currentCurso || "").toUpperCase();
-
-  const body = { poltrona: sel.textContent, CURSO: curso, cpf };
+  const body={ poltrona: sel.textContent, CURSO: currentCurso, cpf };
 
   try{
-    const r = await fetch(POST_ENDPOINT, {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify(body)
+    const r=await fetch(POST_ENDPOINT,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(body)
     });
+
     if(r.ok){
-      alert("Poltrona selecionada com sucesso!");
-      setTimeout(()=> location.reload(), 2500);
-    } else {
-      alert("Erro ao enviar dados");
-    }
-  }catch(e){
+      alert("Poltrona cadastrada!");
+      setTimeout(()=>location.reload(),2500);
+    } else alert("Erro ao enviar reserva.");
+  }catch{
     alert("Erro de comunicação.");
   }
 };
 
-/* inicializa */
 renderSeats();
 </script>
 </body>
