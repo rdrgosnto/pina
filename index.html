@@ -50,8 +50,8 @@ let currentBus = "";
 /* MAPEAMENTO DA TURMA → ARQUIVO JSON */
 const courseBusMap = {
   "AAL": "0046",
-  "ALI": "0050",
-  "QUI": "0052",
+  "ALI": "0046",
+  "QUI": "0046",
 };
 
 /* ENDPOINTS */
@@ -197,7 +197,7 @@ q("#confirmarBtn").onclick=async()=>{
   if(!sel) return alert("Selecione uma poltrona");
   const cpf=currentUserCPF;
 
-  if(rb.includes(cpf)) return alert("Você já possui reserva.");
+  if(rb.includes(cpf)) return alert("Usuário já possui reserva.");
 
   const body={ poltrona: sel.textContent, CURSO: currentCurso, cpf };
 
