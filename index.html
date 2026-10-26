@@ -3,83 +3,88 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Formulário do Estudante</title>
+  <title>Informações de Contato</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <div class="form-wrapper">
-    <form id="student-form">
+  <!-- Splash Screen Inicial -->
+  <div id="splash-screen">
+    <div class="splash-content">
+      <div class="spinner"></div>
+      <h2>Carregando formulário...</h2>
+    </div>
+  </div>
+
+  <!-- Container Principal do Formulário -->
+  <div class="form-card" id="main-content">
+    
+    <!-- Ícone / Indicador de passo -->
+    <div class="step-badge">1</div>
+
+    <h1 class="form-title">Informações de Contato</h1>
+    <p class="form-description">Preencha seus dados abaixo para prosseguir com a inscrição.</p>
+
+    <form id="contact-form">
       
-      <!-- Passo 1: Nome -->
-      <div class="step active">
-        <div class="step-content">
-          <img src="pina_.jpg" alt="Logotipo" class="step-image">
-          <div class="input-group">
-            <label for="nome">
-              <strong>1.</strong> Nome do estudante <strong>(completo, sem abreviações)</strong>
-            </label>
-            <input type="text" id="nome" name="nome" placeholder="Digite o nome completo..." autocomplete="off" required autofocus>
-            <div class="error-msg" id="err-nome">Por favor, insira o nome completo (nome e sobrenome).</div>
-          </div>
-        </div>
+      <!-- Campo 1: Nome e Sobrenome -->
+      <div class="field-group">
+        <label for="nome">Nome e Sobrenome</label>
+        <input type="text" id="nome" name="nome" placeholder="Ex: Rodrigo dos Santos Silva" autocomplete="off" required>
+        <span class="error-msg" id="err-nome">Por favor, digite seu nome e sobrenome sem números.</span>
       </div>
 
-      <!-- Passo 2: CPF -->
-      <div class="step">
-        <div class="step-content">
-          <img src="pina_.jpg" alt="Logotipo" class="step-image">
-          <div class="input-group">
-            <label for="cpf">
-              <strong>2.</strong> CPF do estudante <strong>(somente números)</strong>
-            </label>
-            <input type="text" id="cpf" name="cpf" placeholder="000.000.000-00" maxlength="14" autocomplete="off" required>
-            <div class="error-msg" id="err-cpf">Informe um CPF válido com 11 dígitos.</div>
-          </div>
-        </div>
+      <!-- Campo 2: CPF -->
+      <div class="field-group">
+        <label for="cpf">CPF</label>
+        <input type="text" id="cpf" name="cpf" placeholder="000.000.000-00" maxlength="14" autocomplete="off" required>
+        <span class="error-msg" id="err-cpf">Por favor, digite um CPF válido com 11 dígitos.</span>
       </div>
 
-      <!-- Passo 3: Telefone -->
-      <div class="step">
-        <div class="step-content">
-          <img src="pina_.jpg" alt="Logotipo" class="step-image">
-          <div class="input-group">
-            <label for="telefone">
-              <strong>3.</strong> Telefone do estudante <strong>(somente números)</strong>
-            </label>
-            <input type="tel" id="telefone" name="telefone" placeholder="16991234567" maxlength="15" autocomplete="off" required>
-            <div class="error-msg" id="err-telefone">Informe o telefone completo com DDD (11 dígitos).</div>
+      <!-- Campo 3: Telefone -->
+      <div class="field-group">
+        <label for="telefone">Telefone</label>
+        <div class="phone-input-wrapper">
+          <div class="country-flag">
+            <span class="flag-icon">🇧🇷</span>
+            <span class="arrow">∨</span>
           </div>
+          <input type="tel" id="telefone" name="telefone" placeholder="(16) 99123-4567" maxlength="15" autocomplete="off" required>
         </div>
+        <span class="error-msg" id="err-telefone">Digite um telefone válido com DDD (Ex: 16991234567).</span>
       </div>
 
-      <!-- Passo 4: Endereço -->
-      <div class="step">
-        <div class="step-content">
-          <img src="pina_.jpg" alt="Logotipo" class="step-image">
-          <div class="input-group">
-            <label for="endereco">
-              <strong>4.</strong> Endereço completo <strong>com CEP</strong>
-            </label>
-            <textarea id="endereco" name="endereco" rows="3" placeholder="Rua, número, bairro, cidade - UF, CEP 00000-000" required></textarea>
-            <div class="error-msg" id="err-endereco">Por favor, preencha o endereço completo com o CEP.</div>
-          </div>
-        </div>
+      <!-- Campo 4: E-mail -->
+      <div class="field-group">
+        <label for="email">E-mail</label>
+        <input type="email" id="email" name="email" placeholder="nome@exemplo.com" autocomplete="off" required>
+        <span class="error-msg" id="err-email">Por favor, insira um e-mail válido contendo '@' e domínio.</span>
       </div>
 
-      <!-- Ações de Navegação -->
-      <div class="nav-controls">
-        <button type="button" id="btn-prev" class="btn btn-secondary" disabled>Anterior</button>
-        <button type="button" id="btn-next" class="btn btn-primary">Avançar</button>
-        <button type="submit" id="btn-submit" class="btn btn-success" style="display: none;">Concluir</button>
+      <!-- Campo 5: Ano/Curso -->
+      <div class="field-group">
+        <label for="curso">Ano/Curso</label>
+        <select id="curso" name="curso" required>
+          <option value="" disabled selected>Selecione seu curso e ano...</option>
+          <option value="1º Açúcar e Álcool">1º Açúcar e Álcool</option>
+          <option value="2º Açúcar e Álcool">2º Açúcar e Álcool</option>
+          <option value="3º Açúcar e Álcool">3º Açúcar e Álcool</option>
+          <option value="1º Alimentos">1º Alimentos</option>
+          <option value="2º Alimentos">2º Alimentos</option>
+          <option value="3º Alimentos">3º Alimentos</option>
+          <option value="1º Química">1º Química</option>
+          <option value="2º Química">2º Química</option>
+          <option value="3º Química">3º Química</option>
+          <option value="1º Segurança do Trabalho">1º Segurança do Trabalho</option>
+          <option value="2º Segurança do Trabalho">2º Segurança do Trabalho</option>
+          <option value="3º Segurança do Trabalho">3º Segurança do Trabalho</option>
+        </select>
+        <span class="error-msg" id="err-curso">Por favor, selecione uma turma na lista.</span>
       </div>
+
+      <button type="submit" class="btn-submit">Enviar Informações</button>
 
     </form>
-
-    <!-- Barra de Progresso -->
-    <div class="progress-bar">
-      <div class="progress" id="progress"></div>
-    </div>
   </div>
 
   <script src="script.js"></script>
