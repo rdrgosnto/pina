@@ -4,7 +4,213 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Informações de Contato</title>
-  <link rel="stylesheet" href="style.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f8fafc;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* Splash Screen */
+    #splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease, visibility 0.5s;
+    }
+
+    .splash-content {
+      text-align: center;
+    }
+
+    .spinner {
+      width: 42px;
+      height: 42px;
+      border: 4px solid #e2e8f0;
+      border-top-color: #1e293b;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .splash-content h2 {
+      font-size: 1.05rem;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    /* Card Principal (Estilo Typeform da Imagem) */
+    .form-card {
+      width: 100%;
+      max-width: 520px;
+      background: #ffffff;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      border: 1px solid #f1f5f9;
+    }
+
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      background-color: #1e293b;
+      color: #ffffff;
+      font-weight: bold;
+      font-size: 0.85rem;
+      border-radius: 4px;
+      margin-bottom: 16px;
+    }
+
+    .form-title {
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .form-description {
+      font-size: 0.95rem;
+      color: #64748b;
+      margin-bottom: 32px;
+      font-style: italic;
+    }
+
+    /* Grupos de Campos */
+    .field-group {
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 8px;
+    }
+
+    input, select {
+      width: 100%;
+      border: none;
+      border-bottom: 1px solid #cbd5e1;
+      padding: 10px 0;
+      font-size: 1.05rem;
+      color: #0f172a;
+      background: transparent;
+      outline: none;
+      transition: border-color 0.2s;
+      border-radius: 0;
+    }
+
+    input::placeholder {
+      color: #94a3b8;
+    }
+
+    input:focus, select:focus {
+      border-bottom-color: #1e293b;
+    }
+
+    /* Campo Telefone com Bandeira SVG */
+    .phone-input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .country-flag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #cbd5e1;
+      user-select: none;
+    }
+
+    .flag-img {
+      width: 24px;
+      height: 17px;
+      object-fit: cover;
+      border-radius: 2px;
+      box-shadow: 0 0 1px rgba(0,0,0,0.2);
+    }
+
+    .arrow {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    .phone-input-wrapper input {
+      flex: 1;
+    }
+
+    /* Mensagens de Erro */
+    .error-msg {
+      color: #ef4444;
+      font-size: 0.8rem;
+      margin-top: 6px;
+      display: none;
+    }
+
+    /* Botão Enviar com a mesma cor do badge do topo (#1e293b) */
+    .btn-submit {
+      width: 100%;
+      margin-top: 16px;
+      padding: 14px;
+      background-color: #1e293b;
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .btn-submit:hover {
+      background-color: #0f172a;
+    }
+
+    .btn-submit:active {
+      transform: scale(0.99);
+    }
+
+    /* Responsividade */
+    @media (max-width: 480px) {
+      .form-card {
+        padding: 24px 20px;
+      }
+
+      .form-title {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
 </head>
 <body>
 
@@ -19,7 +225,7 @@
   <!-- Container Principal do Formulário -->
   <div class="form-card" id="main-content">
     
-    <!-- Ícone / Indicador de passo -->
+    <!-- Ícone / Indicador numérico do topo -->
     <div class="step-badge">1</div>
 
     <h1 class="form-title">Informações de Contato</h1>
@@ -30,8 +236,8 @@
       <!-- Campo 1: Nome e Sobrenome -->
       <div class="field-group">
         <label for="nome">Nome e Sobrenome</label>
-        <input type="text" id="nome" name="nome" placeholder="Ex: Rodrigo dos Santos Silva" autocomplete="off" required>
-        <span class="error-msg" id="err-nome">Por favor, digite seu nome e sobrenome sem números.</span>
+        <input type="text" id="nome" name="nome" placeholder="Digite seu nome e sobrenome..." autocomplete="off" required>
+        <span class="error-msg" id="err-nome">Por favor, informe seu nome e pelo menos um sobrenome.</span>
       </div>
 
       <!-- Campo 2: CPF -->
@@ -41,12 +247,13 @@
         <span class="error-msg" id="err-cpf">Por favor, digite um CPF válido com 11 dígitos.</span>
       </div>
 
-      <!-- Campo 3: Telefone -->
+      <!-- Campo 3: Telefone com SVG da Bandeira -->
       <div class="field-group">
         <label for="telefone">Telefone</label>
         <div class="phone-input-wrapper">
           <div class="country-flag">
-            <span class="flag-icon">🇧🇷</span>
+            <!-- Utiliza o arquivo bandeira.svg local enviado para a pasta do repositório -->
+            <img src="bandeira.svg" alt="Brasil" class="flag-img" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/0/05/Flag_of_Brazil.svg'">
             <span class="arrow">∨</span>
           </div>
           <input type="tel" id="telefone" name="telefone" placeholder="(16) 99123-4567" maxlength="15" autocomplete="off" required>
@@ -82,11 +289,151 @@
         <span class="error-msg" id="err-curso">Por favor, selecione uma turma na lista.</span>
       </div>
 
+      <!-- Botão Enviar com cor sincronizada ao elemento [1] -->
       <button type="submit" class="btn-submit">Enviar Informações</button>
 
     </form>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    // Transição da Splash Screen
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const splash = document.getElementById('splash-screen');
+        splash.style.opacity = '0';
+        setTimeout(() => {
+          splash.style.display = 'none';
+        }, 500);
+      }, 1200);
+    });
+
+    // Elementos
+    const inputNome = document.getElementById('nome');
+    const inputCpf = document.getElementById('cpf');
+    const inputTelefone = document.getElementById('telefone');
+    const inputEmail = document.getElementById('email');
+    const selectCurso = document.getElementById('curso');
+    const form = document.getElementById('contact-form');
+
+    // Remove acentos
+    function removerAcentos(str) {
+      return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+
+    // Formatação do Nome (Title Case, mantém de/da/do/das/dos minúsculos)
+    function formatarNome(valor) {
+      const preposicoes = ['de', 'da', 'do', 'das', 'dos'];
+      const textoLimpo = removerAcentos(valor).replace(/[^a-zA-Z\s]/g, '');
+      
+      const palavras = textoLimpo.toLowerCase().split(' ');
+      const formatadas = palavras.map((palavra, index) => {
+        if (palavra.length === 0) return '';
+        if (index > 0 && preposicoes.includes(palavra)) {
+          return palavra;
+        }
+        return palavra.charAt(0).toUpperCase() + palavra.slice(1);
+      });
+
+      return formatadas.join(' ');
+    }
+
+    inputNome.addEventListener('input', (e) => {
+      e.target.value = formatarNome(e.target.value);
+    });
+
+    // Máscara do CPF
+    inputCpf.addEventListener('input', (e) => {
+      let val = e.target.value.replace(/\D/g, '');
+      if (val.length > 11) val = val.slice(0, 11);
+
+      let mascara = val;
+      if (val.length > 9) mascara = val.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+      else if (val.length > 6) mascara = val.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+      else if (val.length > 3) mascara = val.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+
+      e.target.value = mascara;
+    });
+
+    // Máscara do Telefone
+    inputTelefone.addEventListener('input', (e) => {
+      let val = e.target.value.replace(/\D/g, '');
+      if (val.length > 11) val = val.slice(0, 11);
+
+      let mascara = val;
+      if (val.length > 10) mascara = val.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+      else if (val.length > 6) mascara = val.replace(/(\d{2})(\d{4,5})(\d{0,4})/, '($1) $2-$3');
+      else if (val.length > 2) mascara = val.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+
+      e.target.value = mascara;
+    });
+
+    // Validação
+    function validarFormulario() {
+      let valido = true;
+
+      // Exige Nome + pelo menos um Sobrenome
+      const partesNome = inputNome.value.trim().split(' ').filter(p => p.length > 0);
+      if (partesNome.length < 2) {
+        document.getElementById('err-nome').style.display = 'block';
+        valido = false;
+      } else {
+        document.getElementById('err-nome').style.display = 'none';
+      }
+
+      // CPF de 11 dígitos
+      const cpfNumeros = inputCpf.value.replace(/\D/g, '');
+      if (cpfNumeros.length !== 11) {
+        document.getElementById('err-cpf').style.display = 'block';
+        valido = false;
+      } else {
+        document.getElementById('err-cpf').style.display = 'none';
+      }
+
+      // Telefone com DDD (10 ou 11 dígitos)
+      const telNumeros = inputTelefone.value.replace(/\D/g, '');
+      if (telNumeros.length < 10 || telNumeros.length > 11) {
+        document.getElementById('err-telefone').style.display = 'block';
+        valido = false;
+      } else {
+        document.getElementById('err-telefone').style.display = 'none';
+      }
+
+      // E-mail válido
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(inputEmail.value.trim())) {
+        document.getElementById('err-email').style.display = 'block';
+        valido = false;
+      } else {
+        document.getElementById('err-email').style.display = 'none';
+      }
+
+      // Seleção do Curso
+      if (!selectCurso.value) {
+        document.getElementById('err-curso').style.display = 'block';
+        valido = false;
+      } else {
+        document.getElementById('err-curso').style.display = 'none';
+      }
+
+      return valido;
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      if (validarFormulario()) {
+        const payload = {
+          nome: inputNome.value,
+          cpf: inputCpf.value.replace(/\D/g, ''),
+          telefone: inputTelefone.value.replace(/\D/g, ''),
+          email: inputEmail.value.trim(),
+          curso: selectCurso.value
+        };
+
+        console.log("Dados validados e prontos para o Power Automate:", payload);
+        alert("Informações enviadas com sucesso!");
+      }
+    });
+  </script>
 </body>
 </html>
