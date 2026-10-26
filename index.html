@@ -3,38 +3,80 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Formulário Interativo</title>
+  <title>Formulário do Estudante</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <div class="form-container">
-    <form id="typeform" action="https://formspree.io/f/SEU_ID_AQUI" method="POST">
+  <div class="form-wrapper">
+    <form id="student-form">
       
-      <!-- Passo 1 -->
+      <!-- Passo 1: Nome -->
       <div class="step active">
-        <label for="nome"><span class="step-num">1 →</span> Qual é o seu nome?</label>
-        <input type="text" id="nome" name="nome" placeholder="Digite seu nome aqui..." required autofocus>
-        <button type="button" class="btn-next">OK ✓</button>
+        <div class="step-content">
+          <img src="logo.png" alt="Logotipo" class="step-image">
+          <div class="input-group">
+            <label for="nome">
+              <strong>1.</strong> Nome do estudante <strong>(completo, sem abreviações)</strong>
+            </label>
+            <input type="text" id="nome" name="nome" placeholder="Digite o nome completo..." autocomplete="off" required autofocus>
+            <div class="error-msg" id="err-nome">Por favor, insira o nome completo (nome e sobrenome).</div>
+          </div>
+        </div>
       </div>
 
-      <!-- Passo 2 -->
+      <!-- Passo 2: CPF -->
       <div class="step">
-        <label for="email"><span class="step-num">2 →</span> Qual o seu e-mail de contato?</label>
-        <input type="email" id="email" name="email" placeholder="nome@exemplo.com" required>
-        <button type="button" class="btn-next">OK ✓</button>
+        <div class="step-content">
+          <img src="logo.png" alt="Logotipo" class="step-image">
+          <div class="input-group">
+            <label for="cpf">
+              <strong>2.</strong> CPF do estudante <strong>(somente números)</strong>
+            </label>
+            <input type="text" id="cpf" name="cpf" placeholder="000.000.000-00" maxlength="14" autocomplete="off" required>
+            <div class="error-msg" id="err-cpf">Informe um CPF válido com 11 dígitos.</div>
+          </div>
+        </div>
       </div>
 
-      <!-- Passo 3 -->
+      <!-- Passo 3: Telefone -->
       <div class="step">
-        <label for="mensagem"><span class="step-num">3 →</span> Como posso te ajudar?</label>
-        <textarea id="mensagem" name="mensagem" rows="3" placeholder="Escreva sua mensagem..." required></textarea>
-        <button type="submit" class="btn-submit">Enviar</button>
+        <div class="step-content">
+          <img src="logo.png" alt="Logotipo" class="step-image">
+          <div class="input-group">
+            <label for="telefone">
+              <strong>3.</strong> Telefone do estudante <strong>(somente números)</strong>
+            </label>
+            <input type="tel" id="telefone" name="telefone" placeholder="16991234567" maxlength="15" autocomplete="off" required>
+            <div class="error-msg" id="err-telefone">Informe o telefone completo com DDD (11 dígitos).</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Passo 4: Endereço -->
+      <div class="step">
+        <div class="step-content">
+          <img src="logo.png" alt="Logotipo" class="step-image">
+          <div class="input-group">
+            <label for="endereco">
+              <strong>4.</strong> Endereço completo <strong>com CEP</strong>
+            </label>
+            <textarea id="endereco" name="endereco" rows="3" placeholder="Rua, número, bairro, cidade - UF, CEP 00000-000" required></textarea>
+            <div class="error-msg" id="err-endereco">Por favor, preencha o endereço completo com o CEP.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ações de Navegação -->
+      <div class="nav-controls">
+        <button type="button" id="btn-prev" class="btn btn-secondary" disabled>Anterior</button>
+        <button type="button" id="btn-next" class="btn btn-primary">Avançar</button>
+        <button type="submit" id="btn-submit" class="btn btn-success" style="display: none;">Concluir</button>
       </div>
 
     </form>
 
-    <!-- Indicador de Progresso -->
+    <!-- Barra de Progresso -->
     <div class="progress-bar">
       <div class="progress" id="progress"></div>
     </div>
